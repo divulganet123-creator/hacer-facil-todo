@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/responses";
-const MODEL = "openai/gpt-6-astra";
+const API_URL = "https://api.openai.com/v1/responses";
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
@@ -14,13 +13,14 @@ export const Route = createFileRoute("/api/ask")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["LOVABLE_API_KEY"];
+        const apiKey = process.env["OPENAI_API_KEY"];
         if (!apiKey) {
           return json(412, {
             error: "server_not_configured",
-            message: "IA do servidor não configurada.",
+            message: "OPENAI_API_KEY não configurada.",
           });
         }
+        const model = process.env["OPENAI_MODEL"] || "gpt-6-sol";
 
         let prompt: unknown;
         try {
@@ -34,19 +34,17 @@ export const Route = createFileRoute("/api/ask")({
 
         let resp: Response;
         try {
-          resp = await fetch(GATEWAY_URL, {
+          resp = await fetch(API_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${apiKey}`,
-              "X-Lovable-AIG-SDK": "fetch",
             },
             body: JSON.stringify({
-              model: MODEL,
+              model,
               input: prompt,
               store: false,
               stream: true,
-              reasoning: { effort: "low" },
             }),
             signal: request.signal,
           });
