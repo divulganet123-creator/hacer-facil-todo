@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Codex — Estudo Textual Bíblico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif:wght@400;600&family=Noto+Serif+Hebrew:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #101A2E;
+    --panel: #182541;
+    --panel-raised: #223257;
+    --ink: #F7F2E4;
+    --ink-soft: #E3DBC3;
+    --ink-faint: #B9C0CE;
+    --rubric: #F0AC94;
+    --rubric-soft: #EE9A7C;
+    --gold: #E8C170;
+    --verdigris: #A6CBB7;
+    --map-sea: #0D1526;
+    --map-coast: rgba(247,242,228,0.42);
+    --map-river: #7FACC0;
+    --map-label-sea: #9BC0D4;
+    --border: rgba(247,242,228,0.20);
+    --border-strong: rgba(247,242,228,0.40);
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    height: 100%;
+    background: var(--parchment);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(212,175,90,0.05), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(212,175,90,0.06), transparent 55%);
+    color: var(--ink);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 720px; margin: 0 auto; padding: 2.6rem 1.25rem 4rem; }
+
+  /* ---------- Hero ---------- */
+  .hero { text-align: center; margin-bottom: 2.2rem; }
+  .hero-mark {
+    width: 54px; height: 54px; margin: 0 auto 1rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif', serif; font-size: 1.5rem; color: var(--rubric);
+    background: var(--panel-raised);
+  }
+  .hero h1 {
+    font-size: clamp(1.9rem, 6vw, 2.5rem);
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+    letter-spacing: 0.01em;
+  }
+  .hero p.tagline {
+    color: var(--ink-soft);
+    font-style: italic;
+    font-size: 1.05rem;
+    margin: 0;
+    max-width: 44ch;
+    margin-inline: auto;
+  }
+
+  /* ---------- Search ---------- */
+  .search-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.1rem;
+    margin-bottom: 1.6rem;
+  }
+  form#searchForm { display: flex; gap: 0.6rem; }
+  #refInput {
+    flex: 1;
+    font-family: 'EB Garamond', serif;
+    font-size: 1.08rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: var(--panel-raised);
+    color: var(--ink);
+  }
+  #refInput:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  #refInput::placeholder { color: var(--ink-faint); }
+  button {
+    font-family: 'EB Garamond', serif;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--rubric);
+    color: #0C1322;
+    border: none;
+    border-radius: 3px;
+    padding: 0.6rem 1.2rem;
+    font-size: 1.05rem;
+    font-weight: 500;
+    transition: background 0.15s ease;
+  }
+  .btn-primary:hover { background: var(--rubric-soft); }
+  .btn-primary:disabled { opacity: 0.55; cursor: default; }
+  .history-row {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+  .history-chip {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-soft);
+  }
+  .history-chip:hover { border-color: var(--border-strong); color: var(--ink); }
+  .ia-status {
+    margin-top: 0.7rem;
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+  }
+  .ia-status.ok { color: var(--verdigris); }
+  .ia-status.fail { color: var(--rubric); }
+  .ia-status button.link-btn {
+    background: none; border: none; padding: 0; margin-left: 0.4em;
+    color: var(--gold); text-decoration: underline; text-underline-offset: 2px;
+    font-size: inherit; cursor: pointer; font-family: inherit;
+  }
+
+  .apikey-box {
+    margin-top: 0.7rem; padding: 0.8rem 0.9rem;
+    background: var(--panel-raised); border: 1px solid var(--border-strong); border-radius: 4px;
+  }
+  .apikey-box p { margin: 0 0 0.6rem; font-size: 0.86rem; color: var(--ink-soft); }
+  .apikey-box .apikey-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .apikey-box input[type="password"], .apikey-box input[type="text"] {
+    flex: 1 1 220px; min-width: 0;
+    background: var(--panel); border: 1px solid var(--border-strong); border-radius: 3px;
+    padding: 0.5rem 0.7rem; color: var(--ink); font-family: 'EB Garamond', serif; font-size: 0.95rem;
+  }
+  .apikey-box .apikey-row button { font-size: 0.86rem; padding: 0.4rem 0.8rem; }
+  .apikey-box .apikey-note { margin-top: 0.5rem; font-size: 0.78rem; color: var(--ink-faint); }
+  .apikey-box .apikey-note a { color: var(--verdigris); }
+
+  .examples { margin-top: 0.7rem; font-size: 0.92rem; color: var(--ink-faint); }
+  .examples button {
+    background: none; border: none; padding: 0; margin-right: 0.9rem;
+    color: var(--verdigris); text-decoration: underline; text-underline-offset: 2px;
+    font-size: 0.92rem;
+  }
+
+  /* ---------- Status ---------- */
+  .status {
+    padding: 1.4rem 0.4rem;
+    color: var(--ink-soft);
+    font-style: italic;
+    text-align: center;
+  }
+  .status .spinner-line {
+    width: 34px; height: 1px; background: var(--border-strong);
+    margin: 0.7rem auto 0;
+  }
+  .status-elapsed {
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    font-style: normal;
+    color: var(--ink-faint);
+  }
+  .error-box {
+    background: var(--panel);
+    border: 1px solid var(--rubric);
+    border-radius: 4px;
+    padding: 1rem 1.1rem;
+    color: var(--ink);
+  }
+  .error-box .err-title { color: var(--rubric); font-weight: 600; margin-bottom: 0.25rem; }
+  .raw-fallback {
+    white-space: pre-wrap;
+    font-family: 'Noto Serif', serif;
+    font-size: 0.92rem;
+    color: var(--ink);
+    margin-top: 0.8rem;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  /* ---------- Result header ---------- */
+  .result-head {
+    border-top: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-strong);
+    padding: 1.4rem 0;
+    margin-bottom: 1.4rem;
+  }
+  .result-head .drop {
+    font-family: 'Noto Serif', serif;
+    font-size: 3.1rem;
+    line-height: 0.8;
+    float: left;
+    color: var(--rubric);
+    margin-right: 0.35rem;
+    margin-top: 0.1rem;
+  }
+  .result-head h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.2rem;
+  }
+  .result-head .meta {
+    color: var(--gold);
+    font-size: 0.95rem;
+    font-style: italic;
+  }
+  .clearfix::after { content: ""; display: table; clear: both; }
+
+  .original-block { margin: 1.1rem 0 0.9rem; clear: both; }
+  .original-text {
+    font-family: 'Noto Serif', 'Noto Serif Hebrew', serif;
+    font-size: 1.35rem;
+    direction: var(--txt-dir, ltr);
+    line-height: 1.7;
+    color: var(--ink);
+    margin-bottom: 0.55rem;
+  }
+  .translit {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    margin-bottom: 0.5rem;
+  }
+  .literal {
+    color: var(--ink);
+    font-size: 1.02rem;
+  }
+  .literal .label, .translit .label { color: var(--ink-faint); font-style: normal; margin-right: 0.4em; }
+  .isagogia {
+    clear: both;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    padding: 0.6rem 0.75rem;
+    border-left: 2px solid var(--gold);
+    background: var(--panel);
+    margin-bottom: 1.1rem;
+  }
+  .isagogia .label { color: var(--gold); font-style: italic; margin-right: 0.4em; }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.1rem;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.45rem 0.15rem;
+    margin-right: 0.75rem;
+    font-size: 0.96rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .tab-btn.active { color: var(--rubric); border-bottom-color: var(--rubric); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadein 0.2s ease; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+  .entry { margin-bottom: 1.15rem; padding-left: 1rem; border-left: 2px solid var(--border); }
+  .entry .entry-title { font-weight: 600; color: var(--ink); margin-bottom: 0.2rem; }
+  .entry .entry-sub { font-size: 0.88rem; color: var(--gold); font-style: italic; margin-bottom: 0.3rem; }
+  .entry .entry-body { color: var(--ink); }
+
+  .morph-word {
+    display: inline-block;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.5rem 0.7rem;
+    margin: 0 0.4rem 0.4rem 0;
+    font-size: 0.92rem;
+    vertical-align: top;
+  }
+  .morph-word .mw-orig { font-family: 'Noto Serif','Noto Serif Hebrew',serif; font-size: 1.1rem; color: var(--rubric); }
+  .morph-word .mw-gloss { color: var(--ink-soft); }
+  .morph-word .mw-strong {
+    display: inline-block;
+    font-size: 0.78rem;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+    margin: 0.3rem 0;
+    background: none;
+    font-family: 'EB Garamond', serif;
+    cursor: pointer;
+  }
+  .morph-word .mw-strong:hover, .morph-word .mw-strong:focus {
+    background: var(--gold);
+    color: var(--panel-raised);
+    outline: none;
+  }
+  .morph-grid { display: flex; flex-wrap: wrap; }
+
+  .crossref-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.65rem 0.8rem;
+    margin-bottom: 0.55rem;
+    color: var(--ink);
+  }
+  .crossref-btn:hover { border-color: var(--gold); }
+  .crossref-btn .cr-ref { color: var(--rubric); font-weight: 600; margin-right: 0.5em; }
+  .crossref-btn .cr-note { color: var(--ink-soft); font-size: 0.92rem; }
+
+  .exegese-text { color: var(--ink); }
+  .exegese-text p { margin: 0 0 0.9rem; }
+
+  .actions-row { display: flex; gap: 0.6rem; margin-top: 1.6rem; }
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border-strong);
+    color: var(--ink-soft);
+    border-radius: 3px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.92rem;
+  }
+  .btn-ghost:hover { color: var(--ink); border-color: var(--gold); }
+
+  footer.note {
+    margin-top: 2.5rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  /* ---------- Strong modal ---------- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,15,8,0.55);
+    z-index: 50;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0 0.9rem env(safe-area-inset-bottom, 0.9rem);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-card {
+    background: var(--panel-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px 8px 0 0;
+    width: 100%;
+    max-width: 560px;
+    padding: 1.4rem 1.3rem 1.6rem;
+    position: relative;
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.25);
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  @media (min-width: 640px) {
+    .modal-overlay { align-items: center; }
+    .modal-card { border-radius: 8px; }
+  }
+  .modal-close {
+    position: absolute;
+    top: 0.7rem; right: 0.7rem;
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.3rem;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-strong-num {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    padding: 0.15rem 0.7rem;
+    margin-bottom: 0.7rem;
+  }
+  .modal-strong-word {
+    font-family: 'Noto Serif','Noto Serif Hebrew',serif;
+    font-size: 1.7rem;
+    color: var(--rubric);
+    margin-bottom: 0.15rem;
+  }
+  .modal-strong-translit {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 0.8rem;
+  }
+  .modal-strong-def {
+    color: var(--ink);
+    line-height: 1.6;
+  }
+
+
+  /* ---------- Abas sob demanda, selos e entradas ---------- */
+  .tab-btn.loading::after {
+    content: ''; display: inline-block; width: 5px; height: 5px; margin-left: 0.35rem;
+    border-radius: 50%; background: var(--gold); vertical-align: middle;
+    animation: pulse 1.1s ease-in-out infinite;
+  }
+  .tab-btn.err::after { content: '!'; margin-left: 0.3rem; color: var(--rubric); font-weight: 600; }
+  @keyframes pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .tab-btn.loading::after { animation: none; }
+    .tab-panel.active { animation: none; }
+  }
+  .entry .entry-by { font-weight: 400; color: var(--ink-soft); }
+  .entry .entry-reading {
+    font-family: 'Noto Serif','Noto Serif Hebrew',serif;
+    font-size: 0.98rem; color: var(--ink); margin-bottom: 0.3rem;
+  }
+  .entry .entry-note { font-size: 0.9rem; color: var(--gold); font-style: italic; margin-top: 0.3rem; }
+  .entry .label { color: var(--ink-faint); font-style: normal; margin-right: 0.4em; }
+  .pill {
+    display: inline-block; font-size: 0.74rem; font-style: normal;
+    border: 1px solid currentColor; border-radius: 999px;
+    padding: 0.02rem 0.5rem; margin-left: 0.5rem; vertical-align: 1px;
+  }
+  .pill.ok { color: var(--verdigris); }
+  .pill.mid { color: var(--gold); }
+  .pill.low { color: var(--rubric); }
+  .btn-ghost:disabled { opacity: 0.55; cursor: default; }
+
+  /* ---------- Mapa ---------- */
+  .map-tools { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.7rem; }
+  .map-view.active { color: var(--rubric); border-color: var(--rubric); }
+  .map-frame { border: 1px solid var(--border-strong); border-radius: 4px; overflow: hidden; background: var(--map-sea); }
+  .map-frame svg { display: block; width: 100%; height: auto; }
+  .mp-land { fill: var(--panel-raised); }
+  .mp-sea { fill: var(--map-sea); stroke: var(--map-coast); stroke-width: 1; stroke-linejoin: round; }
+  .mp-isl { fill: var(--panel-raised); stroke: var(--map-coast); stroke-width: 1; stroke-linejoin: round; }
+  .mp-lake { fill: var(--map-sea); stroke: var(--map-river); stroke-width: 0.8; }
+  .mp-river { fill: none; stroke: var(--map-river); stroke-linecap: round; stroke-linejoin: round; }
+  .mp-t-sea { fill: var(--map-label-sea); font-style: italic; font-size: 14px; }
+  .mp-t-reg { fill: var(--ink-faint); font-size: 13px; letter-spacing: 0.06em; }
+  .mp-t-lbl { fill: var(--ink); font-size: 14px; font-weight: 600; paint-order: stroke; stroke: var(--panel-raised); stroke-width: 3.5px; stroke-linejoin: round; }
+  .mp-mk-txt { fill: var(--rubric); stroke: var(--panel-raised); stroke-width: 2; }
+  .mp-mk-tra { fill: var(--verdigris); stroke: var(--panel-raised); stroke-width: 2; }
+  .mp-mk-unc { fill: none; stroke: var(--ink-soft); stroke-width: 1.4; stroke-dasharray: 3 3; }
+  .mp-mk-num { fill: #0C1322; font-size: 12px; font-weight: 600; text-anchor: middle; pointer-events: none; }
+  .mp-route { fill: none; stroke: var(--gold); stroke-width: 2.4; stroke-dasharray: 7 5; }
+  .map-mk { cursor: pointer; }
+  .map-mk.active .mp-mk-txt, .map-mk.active .mp-mk-tra { stroke: var(--gold); stroke-width: 3.5; }
+  .map-key { font-size: 0.85rem; color: var(--ink-soft); display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; margin: 0.7rem 0 1rem; }
+  .map-key .sw { display: inline-block; width: 12px; height: 12px; margin-right: 0.4rem; vertical-align: -1px; }
+  .map-key .sw.txt { background: var(--rubric); border-radius: 50%; }
+  .map-key .sw.tra { background: var(--verdigris); border-radius: 3px; }
+  .map-key .sw.unc { border: 1.5px dashed var(--ink-soft); border-radius: 50%; }
+  .map-key .sw.rt { height: 0; border-top: 2px dashed var(--gold); vertical-align: 3px; width: 16px; }
+  .map-list { list-style: none; margin: 0; padding: 0; }
+  .map-item {
+    display: flex; gap: 0.7rem; align-items: flex-start; width: 100%; text-align: left;
+    padding: 0.6rem 0.75rem; margin-bottom: 0.45rem;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 3px; color: var(--ink);
+  }
+  .map-item:hover, .map-item.active { border-color: var(--gold); }
+  .map-num {
+    flex: none; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; font-weight: 600; color: #0C1322;
+  }
+  .map-num.txt { background: var(--rubric); border-radius: 50%; }
+  .map-num.tra { background: var(--verdigris); border-radius: 4px; }
+  .map-info { display: block; }
+  .map-name { display: block; font-weight: 600; }
+  .map-desc { display: block; color: var(--ink-soft); font-size: 0.93rem; }
+  .map-outside, .map-note { font-size: 0.85rem; color: var(--ink-faint); font-style: italic; margin: 0.6rem 0 0; }
+
+  @media (max-width: 480px) {
+    .original-text { font-size: 1.18rem; }
+    .result-head .drop { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="hero-mark">𝔓</div>
+    <h1>Codex</h1>
+    <p class="tagline">Crítica textual, manuscritos, gramáticas, edições críticas, patrística, léxico, mapas e exegese — um versículo por vez.</p>
+  </header>
+
+  <section class="search-panel">
+    <form id="searchForm">
+      <input id="refInput" type="text" autocomplete="off" placeholder="Ex.: João 1:1, Gênesis 1:1, Romanos 8:28" />
+      <button type="submit" class="btn-primary" id="searchBtn">Pesquisar</button>
+    </form>
+    <div class="examples">
+      <button type="button" data-ex="João 1:1">João 1:1</button>
+      <button type="button" data-ex="Marcos 1:1">Marcos 1:1</button>
+      <button type="button" data-ex="Salmos 22:16">Salmos 22:16</button>
+      <button type="button" data-ex="1 João 5:7">1 João 5:7</button>
+    </div>
+    <div class="history-row" id="historyRow"></div>
+    <div class="ia-status" id="iaStatus">Conectando à pesquisa por IA…</div>
+  </section>
+
+  <section id="resultArea"></section>
+
+  <footer class="note">Conteúdo gerado por IA a partir do que o modelo conhece das obras citadas (gramáticas, aparatos, edições, dicionários). O app não abre os livros nem reproduz textos protegidos — trate como ponto de partida e confira na fonte.</footer>
+</div>
+
+<div class="modal-overlay" id="strongModalOverlay">
+  <div class="modal-card" id="strongModalCard" role="dialog" aria-modal="true">
+    <button type="button" class="modal-close" id="strongModalClose" aria-label="Fechar">✕</button>
+    <div class="modal-strong-num" id="strongModalNum"></div>
+    <div class="modal-strong-word" id="strongModalWord"></div>
+    <div class="modal-strong-translit" id="strongModalTranslit"></div>
+    <div class="modal-strong-def" id="strongModalDef"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const resultArea = document.getElementById('resultArea');
+  const historyRow = document.getElementById('historyRow');
+  const form = document.getElementById('searchForm');
+  const input = document.getElementById('refInput');
+  const searchBtn = document.getElementById('searchBtn');
+
+  let capabilitiesReady = false;
+
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+    ]);
+  }
+
+  // IA via backend seguro. A chave OPENAI_API_KEY fica somente no servidor.
+  async function callAI(prompt, onProgress, signal) {
+    const resp = await withTimeout(fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt }),
+      signal: signal || undefined
+    }), 210000);
+
+    let body = {};
+    try { body = await resp.json(); } catch (e) {}
+    if (!resp.ok) {
+      const msg = body && body.message ? body.message : ('http_' + resp.status);
+      const err = new Error(msg);
+      err.code = body && body.error ? body.error : (resp.status === 429 ? 'rate_limited' : 'openai_error');
+      err.detail = msg;
+      throw err;
+    }
+
+    const text = body && body.text ? body.text : '';
+    if (onProgress) onProgress({ text: text });
+    return { text: text, truncated: false };
+  }
+
+  function initCapabilities() {
+    const statusEl = document.getElementById('iaStatus');
+    capabilitiesReady = true;
+    if (statusEl) {
+      statusEl.textContent = 'Pesquisa por IA pronta — IA via servidor seguro.';
+      statusEl.className = 'ia-status ok';
+    }
+  }
+  initCapabilities();
+
+  // ---------- history (localStorage, per-viewer convenience) ----------
+  function loadHistory() {
+    try {
+      const raw = localStorage.getItem('codex_history');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function saveHistory(list) {
+    try { localStorage.setItem('codex_history', JSON.stringify(list.slice(0, 10))); } catch (e) {}
+  }
+  function pushHistory(ref) {
+    let list = loadHistory().filter(r => r.toLowerCase() !== ref.toLowerCase());
+    list.unshift(ref);
+    saveHistory(list);
+    renderHistory();
+  }
+  function renderHistory() {
+    const list = loadHistory();
+    historyRow.innerHTML = '';
+    list.forEach(ref => {
+      const b = document.createElement('button');
+      b.className = 'history-chip';
+      b.type = 'button';
+      b.textContent = ref;
+      b.addEventListener('click', () => runSearch(ref));
+      historyRow.appendChild(b);
+    });
+  }
+  renderHistory();
+
+  document.querySelectorAll('.examples button').forEach(b => {
+    b.addEventListener('click', () => runSearch(b.getAttribute('data-ex')));
+  });
+
+  // ---------- Strong modal ----------
+  const strongOverlay = document.getElementById('strongModalOverlay');
+  const strongCard = document.getElementById('strongModalCard');
+  function openStrongModal(btn) {
+    document.getElementById('strongModalNum').textContent = 'Strong ' + btn.getAttribute('data-strong-num');
+    document.getElementById('strongModalWord').textContent = btn.getAttribute('data-strong-word') || '';
+    document.getElementById('strongModalTranslit').textContent = btn.getAttribute('data-strong-translit') || '';
+    document.getElementById('strongModalDef').textContent = btn.getAttribute('data-strong-def') || '';
+    strongOverlay.classList.add('open');
+  }
+  function closeStrongModal() { strongOverlay.classList.remove('open'); }
+  document.getElementById('strongModalClose').addEventListener('click', closeStrongModal);
+  strongOverlay.addEventListener('click', (e) => { if (e.target === strongOverlay) closeStrongModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeStrongModal(); });
+  resultArea.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mw-strong');
+    if (btn) openStrongModal(btn);
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    console.log('Codex: formulário enviado');
+    const ref = input.value.trim();
+    if (ref) runSearch(ref);
+    else console.log('Codex: campo vazio, nada a pesquisar');
+  });
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  }
+
+  function buildPrompt(ref) {
+    return [
+      "Você é um assistente de estudos bíblicos especializado em crítica textual do Novo e Antigo Testamento, papirologia, paleografia, patrística, léxico grego koiné e hebraico bíblico, e hermenêutica/exegese histórico-gramatical.",
+      "Tarefa: produzir uma pesquisa aprofundada sobre a referência bíblica indicada pelo usuário.",
+      "Responda SOMENTE com um objeto JSON válido (sem markdown, sem crases, sem comentário antes ou depois). Use exatamente estas chaves:",
+      "{",
+      '  "referencia": string (referência normalizada, ex: "João 1:1"),',
+      '  "testamento": "Antigo Testamento" | "Novo Testamento",',
+      '  "idioma_original": string (ex: "Grego koiné" ou "Hebraico bíblico" ou "Aramaico bíblico"),',
+      '  "texto_original": string (o texto no idioma original, em escrita nativa — grego ou hebraico),',
+      '  "transliteracao": string,',
+      '  "traducao_literal": string (tradução literal palavra-a-palavra, não uma citação de tradução comercial específica),',
+      '  "isagogia": string (2 a 3 frases de introdução ao livro: autoria, data aproximada, destinatários/contexto histórico e propósito — a "isagogia" do livro em que o versículo está),',
+      '  "morfologia": [ { "palavra": string (forma original), "transliteracao": string, "classe": string (classe gramatical), "analise": string (caso/tempo/modo/gênero/número conforme aplicável), "strong": string (número de Strong correspondente, ex: "G3056" ou "H430"; use "—" se genuinamente não houver), "significado": string (sentido desta palavra NESTE versículo), "definicao_lexica": string (definição de dicionário mais ampla: raiz/etimologia e campo semântico geral da palavra, ao estilo de um verbete de Strong/léxico) } ] (4 a 7 itens cobrindo as palavras-chave do versículo),',
+      '  "variantes_textuais": [ { "variante": string (descrição da leitura variante), "testemunhas": string (manuscritos/famílias textuais que a atestam, com sigla quando conhecida; mencione se a leitura é a adotada pelo Nestle-Aland 28ª edição — NA28 — ou relegada ao aparato crítico), "explicacao": string (relevância exegética/histórica da variante) } ] (1 a 3 itens; se o versículo não tiver variantes significativas conhecidas, explique isso em um único item),',
+      '  "manuscritos_relevantes": [ { "nome": string (ex: "Papiro 𝔓66", "Codex Sinaiticus"), "data": string (datação aproximada), "descricao": string (o que contém e por que é relevante para este versículo) } ] (2 a 3 itens),',
+      '  "versoes_antigas": [ { "nome": "Peshitta (siríaco)" | "Vulgata (latim)" | "Tradição bíblica etíope (Ge\'ez)", "data": string (datação aproximada da versão), "texto_ou_leitura": string (para Peshitta e Vulgata, que são de domínio público, pode citar um trecho breve do texto antigo na língua original; para a tradição etíope, descreva a leitura ou peculiaridade canônica em vez de citar), "relevancia": string (o que essa versão testemunha sobre o texto original ou sua transmissão) } ] (as 3 listadas, uma entrada cada),',
+      '  "lexico_semantico": [ { "palavra": string, "campo_semantico": string, "usos": string (outros usos relevantes no cânon ou em literatura contemporânea, nuances semânticas) } ] (2 a 4 itens),',
+      '  "comparacao_traducoes": [ { "versao": string (uma destas: "Almeida (NAA)", "NVI", "NVT", "Bíblia de Jerusalém", "Bíblia Peregrino", "TEB (Tradução Ecumênica)", "Tradução do Novo Mundo (Testemunhas de Jeová)", "King James (KJV)", "Sinodal Russa (Ortodoxa)"), "abordagem": string (em suas PRÓPRIAS PALAVRAS, nunca citação literal da tradução: descreva a escolha de tradução/interpretação feita por essa versão para este trecho — equivalência formal vs. dinâmica, opção lexical, inclinação teológica quando houver), "observacao": string (por que essa escolha é relevante ou controversa, se for o caso; 1 frase curta), "texto_literal": string (SOMENTE para "King James (KJV)" e "Sinodal Russa (Ortodoxa)", que são de domínio público: o versículo transcrito literalmente, em inglês ou em russo; se não tiver certeza da redação exata, deixe ""; para as demais versões use "") } ] (as 9 versões listadas, uma entrada cada, cada campo com 1 frase curta),',
+      '  "pais_igreja": [ { "autor": string (ex: "Orígenes", "Agostinho", "João Crisóstomo"), "obra": string, "resumo_interpretacao": string (paráfrase da interpretação/uso do versículo, EM SUAS PRÓPRIAS PALAVRAS, não citação literal) } ] (2 a 3 itens),',
+      '  "comentario_versiculo": string (2 a 3 parágrafos de comentário expositivo versículo por versículo, no estilo de um comentário histórico-gramatical de referência como o de Champlin — texto ORIGINAL seu, nunca cópia literal de qualquer comentário publicado — explicando o sentido, estrutura e aplicação teológica do texto),',
+      '  "hermeneutica_exegese": string (2 a 3 parágrafos curtos separados por \\n\\n, cobrindo contexto histórico-literário, estrutura gramatical relevante, e observações de exegese histórico-gramatical; evite eisegese e sinalize quando uma leitura for disputada),',
+      '  "referencias_cruzadas": [ { "ref": string (referência bíblica), "conexao": string (natureza da conexão temática/textual/teológica) } ] (3 a 5 itens)',
+      "}",
+      "Seja denso e direto em cada campo — frases objetivas, sem enrolação — para manter a resposta enxuta.",
+      "Regras: não invente sigla de manuscrito que não exista; quando incerto, diga que é incerto ou disputado entre estudiosos, em vez de inventar precisão falsa. NUNCA reproduza o texto literal de nenhuma tradução bíblica comercial moderna (Almeida/NAA, NVI, NVT, Bíblia de Jerusalém, Bíblia Peregrino, TEB, Tradução do Novo Mundo) nem de comentários publicados (incluindo Champlin) — descreva escolhas de tradução e comente o texto sempre com palavras originais suas, nunca copiando frases das fontes. A Vulgata e a Peshitta são de domínio público (textos antigos) e podem ser citadas literalmente em trechos breves. A King James e a Sinodal Russa também são de domínio público, mas só podem ser citadas literalmente no campo texto_literal. Números de Strong são dados de referência públicos, não citação — pode informá-los normalmente. Escreva tudo em português do Brasil, exceto os campos de texto em idioma original e as siglas de manuscritos.",
+      "Referência solicitada pelo usuário: " + ref
+    ].join("\n");
+  }
+
+  async function runSearch(refRaw) {
+    const ref = refRaw.trim();
+    if (!ref) return;
+    abortCurrentSearch();
+    input.value = ref;
+    searchBtn.disabled = true;
+    resultArea.innerHTML = '';
+    const statusEl = document.createElement('div');
+    statusEl.className = 'status';
+    statusEl.innerHTML = 'Consultando manuscritos, léxicos e comentaristas patrísticos…<div class="spinner-line"></div><div class="status-elapsed"></div>';
+    resultArea.appendChild(statusEl);
+    const elapsedEl = statusEl.querySelector('.status-elapsed');
+    const startedAt = Date.now();
+    let lastChars = 0;
+    const tickTimer = setInterval(() => {
+      const secs = Math.floor((Date.now() - startedAt) / 1000);
+      if (elapsedEl) elapsedEl.textContent = secs + 's — ' + (lastChars ? lastChars + ' caracteres recebidos' : 'aguardando resposta do modelo');
+    }, 1000);
+
+    try {
+      const prompt = buildPrompt(ref);
+      const res = await callAI(prompt, ({ text }) => {
+        lastChars = text ? text.length : 0;
+        const secs = Math.floor((Date.now() - startedAt) / 1000);
+        if (elapsedEl) elapsedEl.textContent = secs + 's — ' + (lastChars ? lastChars + ' caracteres recebidos' : 'aguardando resposta do modelo');
+      });
+      clearInterval(tickTimer);
+      let raw = (res && res.text ? res.text : '').trim();
+      raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (parseErr) {
+        const truncNote = res && res.truncated ? '<p><strong>A resposta foi cortada por exceder o limite de tamanho.</strong> Tente novamente — às vezes uma segunda tentativa gera um resultado mais conciso.</p>' : '';
+        resultArea.innerHTML =
+          '<div class="error-box"><div class="err-title">Não foi possível estruturar a resposta</div>' +
+          truncNote +
+          'A pesquisa retornou, mas não em formato reconhecível. Texto bruto abaixo.' +
+          '<div class="raw-fallback">' + escapeHtml(raw) + '</div></div>' +
+          '<div class="status"><button type="button" class="btn-ghost" id="retryBtn">Tentar novamente</button></div>';
+        const retryBtn = document.getElementById('retryBtn');
+        if (retryBtn) retryBtn.addEventListener('click', () => runSearch(ref));
+        searchBtn.disabled = false;
+        return;
+      }
+      pushHistory(data.referencia || ref);
+      renderResult(data);
+    } catch (err) {
+      clearInterval(tickTimer);
+      console.error('Codex: erro na pesquisa', err);
+      const code = err && err.code ? err.code : (err && err.message === 'timeout' ? 'timeout' : 'erro');
+      let msg = 'Ocorreu um erro ao consultar. Tente novamente em instantes.';
+      if (code === 'not_granted') msg = 'Permissão de pesquisa por IA não concedida para esta página.';
+      if (code === 'rate_limited') msg = 'Muitas pesquisas em sequência — aguarde um momento e tente de novo.';
+      if (code === 'cancelled') msg = 'Pesquisa cancelada.';
+      if (code === 'timeout') msg = 'A consulta demorou mais de 2 minutos e foi interrompida. Tente novamente — versículos com mais variantes levam mais tempo.';
+      if (code === 'server_not_configured') msg = 'A chave OPENAI_API_KEY ainda não foi configurada no servidor.';
+      if (code === 'openai_auth_error') msg = 'A OpenAI recusou a chave configurada no servidor.';
+      if (code === 'openai_error') msg = 'A OpenAI recusou a requisição — verifique a configuração e os créditos da conta.';
+      resultArea.innerHTML = '<div class="error-box"><div class="err-title">' + msg + '</div></div>' +
+        '<div class="status"><button type="button" class="btn-ghost" id="retryBtn">Tentar novamente</button></div>';
+      const retryBtn = document.getElementById('retryBtn');
+      if (retryBtn) retryBtn.addEventListener('click', () => runSearch(ref));
+    }
+    searchBtn.disabled = false;
+  }
+
+  // ==================================================================
+  // Seções carregadas sob demanda: gramáticas, edições críticas,
+  // outras testemunhas, dicionário e mapa. Cada uma faz sua própria
+  // consulta à IA quando a aba é aberta (ou pelo botão "Carregar todas").
+  // ==================================================================
+  const GROUP_ORDER = ['gramaticas', 'edicoes', 'testemunhas', 'dicionario', 'mapa'];
+  let currentSearch = null;
+  let searchCounter = 0;
+
+  function abortCurrentSearch() {
+    if (!currentSearch) return;
+    currentSearch.ctls.forEach(c => { try { c.abort(); } catch (e) {} });
+    currentSearch.ctls.clear();
+    currentSearch = null;
+  }
+
+  function parseJSONLoose(text) {
+    let raw = (text || '').trim();
+    raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '').trim();
+    try { return JSON.parse(raw); } catch (e) {}
+    const a = raw.indexOf('{'), b = raw.lastIndexOf('}');
+    if (a >= 0 && b > a) { try { return JSON.parse(raw.slice(a, b + 1)); } catch (e) {} }
+    return null;
+  }
+
+  function friendlyError(err) {
+    const code = err && err.code ? err.code : (err && err.message === 'timeout' ? 'timeout' : 'erro');
+    if (code === 'not_granted') return 'Permissão de pesquisa por IA não concedida para esta página.';
+    if (code === 'rate_limited') return 'Muitas consultas em sequência — aguarde um momento e tente de novo.';
+    if (code === 'timeout') return 'A consulta demorou demais e foi interrompida. Tente novamente.';
+    if (code === 'truncated') return 'A resposta foi cortada por exceder o limite de tamanho. Tente novamente.';
+    if (code === 'parse') return 'A resposta não veio em formato reconhecível. Tente novamente.';
+    if (code === 'server_not_configured') return 'A chave OPENAI_API_KEY ainda não foi configurada no servidor.';
+    if (code === 'openai_auth_error') return 'A OpenAI recusou a chave configurada no servidor.';
+    if (code === 'openai_error') return 'A OpenAI recusou a requisição — verifique a configuração e os créditos da conta.';
+    return 'Ocorreu um erro ao consultar. Tente novamente em instantes.';
+  }
+
+  const GROUP_HEADER = [
+    "Você é um assistente de estudos bíblicos especializado em crítica textual, história do texto, gramática do grego koiné e do hebraico bíblico.",
+    "Responda SOMENTE com um objeto JSON válido (sem markdown, sem crases, sem comentário antes ou depois). Escreva tudo em português do Brasil, exceto trechos em idioma original e siglas de manuscritos.",
+    "Você não consulta os livros em tempo real: responda a partir do que conhece de cada obra. Nunca invente números de página, siglas, folhas de tratados ou citações. Quando não souber se uma obra ou testemunha trata do versículo, ou o que ela traz, diga isso no campo apropriado e use confiança baixa — \"não preserva este versículo\" e \"sem nota neste versículo\" são respostas válidas e preferíveis a um palpite plausível.",
+    "Obras com direitos autorais (Wallace, Waltke e O'Connor, Weingreen, Futato; aparatos do NA28, do UBS5 e da BHS; edição de Göttingen; Vulgata de Stuttgart/Weber–Gryson): descreva SEMPRE com palavras próprias — nunca copie frases dessas obras nem entradas de aparato. Textos e obras de domínio público (Robertson, Tischendorf, Westcott–Hort, Tregelles, Fausset, KJV, Sinodal Russa, manuscritos e versões antigas): pode citar leituras curtas do texto, mas o comentário sobre eles deve ser seu."
+  ].join("\n");
+
+  function ctxBlock(data) {
+    const palavras = (data.morfologia || []).map(m => m.palavra + (m.strong && m.strong !== '—' ? ' (' + m.strong + ')' : '')).join(', ');
+    return [
+      "Contexto (já pesquisado):",
+      "Referência: " + (data.referencia || ''),
+      "Testamento: " + (data.testamento || ''),
+      "Idioma original: " + (data.idioma_original || ''),
+      "Texto original: " + (data.texto_original || ''),
+      "Palavras-chave: " + palavras
+    ].join("\n");
+  }
+
+  function promptGramaticas(data) {
+    return [
+      GROUP_HEADER,
+      ctxBlock(data),
+      "Tarefa: indicar como as gramáticas de referência tratam a construção sintática mais relevante deste versículo.",
+      "Formato:",
+      "{",
+      '  "sintaxe_chave": string (a construção gramatical ou sintática do versículo que mais pesa na interpretação, em 1 a 2 frases),',
+      '  "obras": [ { "obra": string (título), "autor": string, "categoria": string (nome da categoria ou seção temática de sintaxe sob a qual a obra trataria essa construção; sem número de página), "leitura": string (2 a 3 frases, com palavras próprias: como a obra classificaria ou explicaria a construção e que opção interpretativa favorece; se discute mais de uma leitura, diga), "confianca": "alta" | "media" | "baixa" (sua confiança de que a obra realmente trata o ponto assim) } ]',
+      "}",
+      "Obras, exatamente estas, uma entrada cada:",
+      "- Se o versículo é do Novo Testamento (grego): \"Greek Grammar Beyond the Basics\" (Daniel B. Wallace) e \"A Grammar of the Greek New Testament in the Light of Historical Research\" (A. T. Robertson).",
+      "- Se é do Antigo Testamento (hebraico): \"An Introduction to Biblical Hebrew Syntax\" (Bruce K. Waltke e M. O'Connor), \"A Practical Grammar for Classical Hebrew\" (J. Weingreen) e \"Beginning Biblical Hebrew\" (Mark D. Futato). Se o trecho estiver em aramaico bíblico, avise que essas obras focam no hebraico e que a cobertura é limitada.",
+      "A gramática de Futato é introdutória: se ela não chega a tratar a construção, diga isso e use confiança baixa."
+    ].join("\n");
+  }
+
+  function promptEdicoes(data) {
+    return [
+      GROUP_HEADER,
+      ctxBlock(data),
+      "Tarefa: mostrar como as principais edições críticas e tradições textuais apresentam este versículo.",
+      "Formato:",
+      "{",
+      '  "edicoes": [ { "edicao": string, "leitura": string (a leitura que a edição adota, curta e no idioma original quando necessário; ou "igual à leitura principal" quando não há diferença), "aparato": string (o que o aparato ou a nota da edição registra: variantes e testemunhas; ou "sem nota relevante neste versículo"), "avaliacao": string (1 a 2 frases: força da leitura pelos critérios externos e internos) } ]',
+      "}",
+      "Edições, exatamente estas, uma entrada cada:",
+      "- Se o versículo é do Novo Testamento: \"UBS5 (The Greek New Testament, 5ª ed.)\"; \"Tischendorf — Editio octava critica maior (1869–72)\"; \"Westcott–Hort (1881)\"; \"Tregelles (1857–79)\"; \"Texto Majoritário (Bizantino)\"; \"Texto eclético (NA28/UBS5)\"; \"Vulgata — edição crítica (Weber–Gryson / Nova Vulgata)\".",
+      "- Se é do Antigo Testamento: \"BHS (Biblia Hebraica Stuttgartensia)\"; \"Códice de Leningrado (B19a)\"; \"Códice de Alepo\"; \"Septuaginta (edição crítica de Göttingen)\"; \"Vulgata — edição crítica (Weber–Gryson / Nova Vulgata)\".",
+      "Notas: no Texto Majoritário, indique a leitura da tradição bizantina e, se souber, sua relação com o Textus Receptus. O Códice de Alepo tem lacunas (perdeu, por exemplo, boa parte do Pentateuco): se o trecho estiver numa parte perdida, diga isso. Se a Septuaginta de Göttingen ainda não cobre o livro em edição crítica completa, diga isso. O Texto eclético é o texto construído pelo método eclético razoado: diga onde ele se afasta da tradição majoritária, se se afastar."
+    ].join("\n");
+  }
+
+  function promptTestemunhas(data) {
+    return [
+      GROUP_HEADER,
+      ctxBlock(data),
+      "Tarefa: informar o que testemunhas antigas e tradições adicionais trazem para este versículo.",
+      "Formato:",
+      "{",
+      '  "testemunhas": [ { "nome": string, "data": string (datação aproximada), "disponibilidade": "atesta" | "lacuna_ou_ausente" | "incerto", "atestacao": string (o que a testemunha traz neste versículo, com palavras próprias; se não preserva o trecho ou não tem paralelo, diga), "relevancia": string (1 a 2 frases) } ]',
+      "}",
+      "Testemunhas, exatamente estas, uma entrada cada:",
+      "- Se o versículo é do Novo Testamento: \"Codex Alexandrinus (A / 02)\"; \"Siríaco Antigo — Curetoniano (syr-cur; mencione o Sinaítico, syr-s, quando relevante)\"; \"Evangelho de Tomé (copta, Nag Hammadi II,2)\" — só há paralelo com certos ditos de Jesus: se não houver, marque \"lacuna_ou_ausente\" e explique; \"Talmude e literatura rabínica\" — apenas se houver paralelo ou eco real, senão \"lacuna_ou_ausente\"; \"Torá (texto hebraico)\" — se o versículo cita ou ecoa a Torá, diga qual passagem e como o texto hebraico se compara; senão \"lacuna_ou_ausente\".",
+      "- Se é do Antigo Testamento: \"Codex Alexandrinus (A / 02, texto da Septuaginta)\"; \"Pentateuco Samaritano\" — cobre só Gênesis a Deuteronômio: fora disso marque \"lacuna_ou_ausente\"; \"Talmude (Bavli e Yerushalmi)\" — como a tradição rabínica cita ou interpreta o versículo (cite o tratado só se tiver segurança, sem folhas); \"Torá e tradição judaica de leitura\" — se o versículo está na Torá, fale de sua leitura tradicional (parashá, texto massorético); se está nos Profetas ou nos Escritos, diga a que seção do Tanakh pertence e como a tradição judaica o lê.",
+      "Se o Codex Alexandrinus tiver lacuna no trecho, diga isso."
+    ].join("\n");
+  }
+
+  function promptDicionario(data) {
+    return [
+      GROUP_HEADER,
+      ctxBlock(data),
+      "Tarefa: apresentar verbetes do Fausset's Bible Dictionary (A. R. Fausset, 1878, domínio público) relevantes para este versículo.",
+      "Formato:",
+      "{",
+      '  "verbetes": [ { "verbete": string (nome, termo ou lugar em português, com o original em inglês entre parênteses se souber), "resumo": string (o que o verbete de Fausset diz, em português e com palavras próprias, 2 a 3 frases), "limites": string (1 frase: o que é datado em Fausset ou como a pesquisa posterior nuança), "certeza": "alta" | "media" | "baixa" (sua certeza de que Fausset tem esse verbete e o resume assim) } ] (2 a 4 itens)',
+      "}",
+      "Escolha nomes, termos ou lugares presentes no versículo ou no contexto imediato. Se não tiver certeza de que Fausset tem verbete sobre o tema, use certeza baixa e diga isso no resumo."
+    ].join("\n");
+  }
+
+  function promptMapa(data) {
+    return [
+      GROUP_HEADER,
+      ctxBlock(data),
+      "Tarefa: gerar dados geográficos para desenhar um mapa do Mediterrâneo e do Oriente Próximo antigos, ligado a este versículo.",
+      "Formato:",
+      "{",
+      '  "resumo": string (1 a 2 frases: onde o texto se situa geograficamente),',
+      '  "lugares": [ { "nome": string, "tipo": "texto" | "tradicao", "latitude": number (graus decimais, norte positivo), "longitude": number (graus decimais, leste positivo), "descricao": string (1 frase), "certeza": "alta" | "media" | "baixa" (certeza da localização) } ] (4 a 10 itens),',
+      '  "rota_titulo": string (opcional),',
+      '  "rota": [ string ] (opcional: nomes, na ordem, de lugares da lista acima, se o contexto for uma viagem ou deslocamento)',
+      "}",
+      "- tipo \"texto\": lugares ligados ao conteúdo do versículo ou à composição e ao destino do livro (cidades, regiões, montes, rios).",
+      "- tipo \"tradicao\": lugares ligados à história do texto — onde manuscritos ou versões relevantes para ESTE versículo foram achados, copiados ou produzidos (ex.: Alexandria, Antioquia, Cesareia, Oxirrinco, Nag Hammadi, Mosteiro de Santa Catarina no Sinai, Alepo, Roma, Ravena). Inclua de 2 a 4.",
+      "- Coordenadas aproximadas, com 2 casas decimais. Todos os pontos devem ficar entre 10°N e 46°N e entre 5°E e 53°E. Não invente coordenadas: omita o lugar que não souber situar e use certeza \"baixa\" para sítios de localização disputada.",
+      "- Cada nome deve aparecer uma só vez, em português."
+    ].join("\n");
+  }
+
+  // ---------- estado e carregamento ----------
+  function ensureGroup(search, gid) {
+    const g = search.groups[gid];
+    if (g.promise) return g.promise;
+    g.state = 'loading';
+    updateGroupUI(search, gid);
+    const ctl = new AbortController();
+    search.ctls.add(ctl);
+    g.promise = (async () => {
+      try {
+        const res = await callAI(GROUPS[gid].prompt(search.data), function () {}, ctl.signal);
+        const parsed = parseJSONLoose(res && res.text);
+        if (!parsed || typeof parsed !== 'object') {
+          const e = new Error('parse');
+          e.code = res && res.truncated ? 'truncated' : 'parse';
+          throw e;
+        }
+        g.data = parsed;
+        g.state = 'done';
+      } catch (err) {
+        g.error = err;
+        g.state = 'error';
+        if (currentSearch === search) console.error('Estudo: erro ao carregar "' + gid + '"', err);
+      } finally {
+        search.ctls.delete(ctl);
+      }
+      updateGroupUI(search, gid);
+      return g;
+    })();
+    return g.promise;
+  }
+
+  function retryGroup(search, gid) {
+    const g = search.groups[gid];
+    g.promise = null; g.state = 'idle'; g.error = null;
+    ensureGroup(search, gid);
+  }
+
+  async function prefetchGroups(search) {
+    for (const gid of GROUP_ORDER) {
+      if (currentSearch !== search) return;
+      const g = search.groups[gid];
+      if (g.state === 'idle') g.state = 'queued';
+      updateGroupUI(search, gid);
+    }
+    for (const gid of GROUP_ORDER) {
+      if (currentSearch !== search) return;
+      const g = await ensureGroup(search, gid);
+      if (g.state === 'error') {
+        const code = g.error && g.error.code;
+        if (['rate_limited', 'server_not_configured', 'openai_auth_error', 'openai_error', 'cancelled'].indexOf(code) >= 0) break;
+      }
+    }
+    if (currentSearch === search) {
+      GROUP_ORDER.forEach(gid => { if (search.groups[gid].state === 'queued') { search.groups[gid].state = 'idle'; updateGroupUI(search, gid); } });
+    }
+  }
+
+  function updateGroupUI(search, gid) {
+    if (currentSearch !== search) return;
+    const g = search.groups[gid];
+    const def = GROUPS[gid];
+    const panel = search.panels[gid];
+    const btn = search.tabBtns[gid];
+    if (!panel || !btn) return;
+    btn.classList.toggle('loading', g.state === 'loading');
+    btn.classList.toggle('err', g.state === 'error');
+    if (g.state === 'idle') {
+      panel.innerHTML = '<div class="status">Esta seção é consultada quando você a abre.</div>';
+    } else if (g.state === 'queued') {
+      panel.innerHTML = '<div class="status">Na fila para carregar…</div>';
+    } else if (g.state === 'loading') {
+      panel.innerHTML = '<div class="status">' + escapeHtml(def.loading) + '<div class="spinner-line"></div><div class="status-elapsed">pode levar até um minuto</div></div>';
+    } else if (g.state === 'error') {
+      panel.innerHTML = '<div class="error-box"><div class="err-title">' + escapeHtml(friendlyError(g.error)) + '</div></div>' +
+        '<div class="status"><button type="button" class="btn-ghost" data-retry="' + gid + '">Tentar novamente</button></div>';
+      const rb = panel.querySelector('[data-retry]');
+      if (rb) rb.addEventListener('click', () => retryGroup(search, gid));
+    } else {
+      panel.innerHTML = def.render(g.data, search.data);
+      if (def.after) def.after(panel, g.data);
+    }
+  }
+
+  // ---------- renderizadores ----------
+  function norm(s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+
+  function pill(level, prefix) {
+    const k = norm(level);
+    const map = { alta: ['ok', 'alta'], media: ['mid', 'média'], baixa: ['low', 'baixa'] };
+    if (!map[k]) return '';
+    return '<span class="pill ' + map[k][0] + '">' + prefix + ' ' + map[k][1] + '</span>';
+  }
+
+  function renderGramaticas(g) {
+    const items = Array.isArray(g.obras) ? g.obras : [];
+    if (!items.length && !g.sintaxe_chave) return '<p class="exegese-text">Sem dados de gramáticas para este versículo.</p>';
+    let html = '';
+    if (g.sintaxe_chave) html += '<div class="isagogia"><span class="label">sintaxe-chave</span>' + escapeHtml(g.sintaxe_chave) + '</div>';
+    html += items.map(o => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(o.obra)}${o.autor ? ' <span class="entry-by">— ' + escapeHtml(o.autor) + '</span>' : ''}</div>
+        <div class="entry-sub">${escapeHtml(o.categoria || '')}${pill(o.confianca, 'confiança')}</div>
+        <div class="entry-body">${escapeHtml(o.leitura || '')}</div>
+      </div>`).join('');
+    return html;
+  }
+
+  function renderEdicoes(g) {
+    const items = Array.isArray(g.edicoes) ? g.edicoes : [];
+    if (!items.length) return '<p class="exegese-text">Sem dados de edições críticas.</p>';
+    return items.map(e => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(e.edicao)}</div>
+        ${e.leitura ? '<div class="entry-reading">' + escapeHtml(e.leitura) + '</div>' : ''}
+        <div class="entry-body"><span class="label">aparato</span>${escapeHtml(e.aparato || '')}</div>
+        ${e.avaliacao ? '<div class="entry-note">' + escapeHtml(e.avaliacao) + '</div>' : ''}
+      </div>`).join('');
+  }
+
+  function renderTestemunhas(g) {
+    const items = Array.isArray(g.testemunhas) ? g.testemunhas : [];
+    if (!items.length) return '<p class="exegese-text">Sem dados de outras testemunhas.</p>';
+    const st = { atesta: ['ok', 'atesta o versículo'], lacuna_ou_ausente: ['low', 'lacuna ou ausente'], incerto: ['mid', 'incerto'] };
+    return items.map(t => {
+      const s = st[norm(t.disponibilidade)];
+      return `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(t.nome)}</div>
+        <div class="entry-sub">${escapeHtml(t.data || '')}${s ? '<span class="pill ' + s[0] + '">' + s[1] + '</span>' : ''}</div>
+        <div class="entry-body">${escapeHtml(t.atestacao || '')}</div>
+        ${t.relevancia ? '<div class="entry-note">' + escapeHtml(t.relevancia) + '</div>' : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function renderDicionario(g) {
+    const items = Array.isArray(g.verbetes) ? g.verbetes : [];
+    if (!items.length) return '<p class="exegese-text">Sem verbetes para este versículo.</p>';
+    return '<p class="exegese-text" style="font-size:0.9rem;color:var(--ink-faint);font-style:italic;">Fausset\'s Bible Dictionary (1878). Resumos em palavras próprias; obra datada, confira a pesquisa mais recente.</p>' +
+      items.map(v => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(v.verbete)}</div>
+        <div class="entry-sub">${pill(v.certeza, 'certeza') || '&nbsp;'}</div>
+        <div class="entry-body">${escapeHtml(v.resumo || '')}</div>
+        ${v.limites ? '<div class="entry-note">' + escapeHtml(v.limites) + '</div>' : ''}
+      </div>`).join('');
+  }
+
+  function textGramaticas(g) {
+    const o = ['--- GRAMÁTICAS ---'];
+    if (g.sintaxe_chave) o.push('Sintaxe-chave: ' + g.sintaxe_chave);
+    (g.obras || []).forEach(x => o.push('- ' + x.obra + ' (' + x.autor + ') [' + x.categoria + '; confiança ' + x.confianca + ']: ' + x.leitura));
+    return o;
+  }
+  function textEdicoes(g) {
+    const o = ['--- EDIÇÕES CRÍTICAS ---'];
+    (g.edicoes || []).forEach(x => o.push('- ' + x.edicao + ': ' + (x.leitura || '') + ' | aparato: ' + (x.aparato || '') + ' | ' + (x.avaliacao || '')));
+    return o;
+  }
+  function textTestemunhas(g) {
+    const o = ['--- OUTRAS TESTEMUNHAS ---'];
+    (g.testemunhas || []).forEach(x => o.push('- ' + x.nome + ' (' + (x.data || '') + ', ' + (x.disponibilidade || '') + '): ' + (x.atestacao || '') + ' | ' + (x.relevancia || '')));
+    return o;
+  }
+  function textDicionario(g) {
+    const o = ['--- DICIONÁRIO FAUSSET ---'];
+    (g.verbetes || []).forEach(x => o.push('- ' + x.verbete + ' (certeza ' + (x.certeza || '?') + '): ' + (x.resumo || '') + ' | ' + (x.limites || '')));
+    return o;
+  }
+  function textMapa(g) {
+    const m = prepMap(g);
+    const o = ['--- MAPA ---'];
+    if (g.resumo) o.push(g.resumo);
+    m.inside.concat(m.outside).forEach(p => o.push('- ' + p.nome + ' (' + (p.tipo === 'tradicao' ? 'tradição textual' : 'texto') + '; ' + p.lat + ', ' + p.lon + '): ' + p.descricao));
+    return o;
+  }
+
+  // ==================================================================
+  // Mapa: desenho esquemático em SVG (sem imagens externas)
+  // Coordenadas em [longitude, latitude]; contornos simplificados.
+  // ==================================================================
+  // MAP-START
+  function P(s) {
+    return s.trim().split(/\s+/).map(t => { const a = t.split(','); return [parseFloat(a[0]), parseFloat(a[1])]; });
+  }
+
+  const GEO = {
+    bounds: { minLon: 5, maxLon: 53, minLat: 10, maxLat: 46 },
+    seas: [
+      // Mediterrâneo (com Adriático, Jônico e Egeu)
+      P('4.5,36.6 4.5,43.3 5.4,43.3 6.2,43.1 7.3,43.7 8.0,43.9 8.9,44.4 9.8,44.05 10.3,43.6 10.8,42.9 11.2,42.4 12.2,41.75 13.0,41.3 13.6,41.2 14.25,40.85 14.75,40.65 15.3,40.0 15.75,39.9 16.0,39.35 15.9,38.7 15.65,38.1 16.25,38.2 16.6,38.8 17.1,39.08 16.5,39.75 16.8,40.35 17.2,40.45 17.98,40.05 18.35,39.8 18.5,40.15 17.95,40.65 16.87,41.13 15.9,41.6 16.2,41.95 14.7,42.1 14.2,42.45 13.5,43.6 12.6,44.1 12.5,44.95 12.3,45.4 13.75,45.65 13.85,44.85 14.4,45.3 15.2,44.1 16.4,43.5 18.1,42.65 18.7,42.4 19.1,42.1 19.45,41.3 19.45,40.45 20.0,39.85 20.25,39.5 20.75,38.95 21.08,38.53 21.7,38.3 21.15,37.85 21.32,37.65 21.67,37.25 21.7,36.85 21.95,36.8 22.11,37.02 22.3,36.85 22.48,36.39 22.6,36.75 23.19,36.44 23.05,36.69 22.87,37.16 22.8,37.56 23.15,37.63 23.35,37.6 23.0,37.92 23.5,38.03 23.63,37.94 24.02,37.65 24.45,38.0 24.15,38.6 23.3,39.0 22.85,39.35 22.85,39.9 22.65,40.25 22.95,40.62 23.35,40.2 23.4,39.95 23.75,40.05 24.0,39.95 24.4,40.15 23.9,40.3 24.0,40.55 24.4,40.85 25.0,40.95 25.9,40.85 26.2,40.6 26.17,40.05 26.05,39.95 26.1,39.6 26.7,39.3 26.9,39.0 26.5,38.65 26.3,38.3 26.9,38.15 27.25,37.85 27.3,37.5 27.45,37.0 27.3,36.7 28.0,36.7 28.3,36.85 29.1,36.6 29.6,36.2 30.4,36.2 30.6,36.6 30.7,36.85 31.4,36.75 32.0,36.55 32.8,36.05 33.9,36.35 34.65,36.75 35.4,36.6 36.15,36.6 35.95,36.05 35.75,35.5 35.95,35.2 35.85,34.9 35.8,34.45 35.65,34.1 35.5,33.9 35.35,33.55 35.2,33.27 35.1,33.1 35.07,32.92 34.98,32.82 34.9,32.6 34.88,32.5 34.85,32.3 34.75,32.05 34.55,31.65 34.4,31.5 34.25,31.3 33.8,31.1 32.8,31.05 32.3,31.3 31.8,31.5 31.0,31.6 30.4,31.5 30.1,31.35 29.9,31.2 28.9,30.9 27.2,31.35 25.2,31.6 24.0,32.1 22.6,32.75 21.95,32.9 21.0,32.8 20.07,32.1 20.5,30.9 19.2,30.25 17.5,30.6 16.6,31.2 15.1,32.4 14.3,32.65 13.2,32.9 12.1,33.1 11.1,33.5 10.1,33.9 10.75,34.75 10.65,35.8 11.0,37.05 10.3,36.85 9.85,37.3 8.75,36.95 7.75,36.9 6.9,36.9 5.75,36.8 5.1,36.75'),
+      // Mar Negro
+      P('29.1,41.2 28.0,41.9 27.6,42.5 27.9,43.2 28.6,44.2 29.7,45.2 30.2,46.2 31.5,46.6 32.5,46.3 33.0,45.8 32.6,45.4 33.5,44.6 34.2,44.5 35.0,44.8 35.5,45.1 36.5,45.3 37.2,44.9 37.8,44.7 39.7,43.6 41.0,43.0 41.7,42.2 41.6,41.6 40.5,41.0 39.7,41.0 38.4,40.95 37.0,41.05 36.3,41.3 35.1,42.0 33.8,42.0 32.5,41.7 31.8,41.45 30.0,41.15'),
+      // Mar de Mármara
+      P('26.4,40.05 26.2,40.4 27.0,40.6 28.0,40.95 28.9,41.0 29.1,41.2 29.0,40.9 29.9,40.7 29.0,40.4 27.9,40.4 27.2,40.35 26.7,40.15'),
+      // Mar Vermelho, golfos de Suez e de Áqaba, golfo de Áden
+      P('32.55,30.0 32.75,29.9 33.0,29.35 33.15,28.95 33.5,28.4 33.9,27.95 34.25,27.75 34.5,28.3 34.7,28.9 34.9,29.5 35.0,29.5 34.95,28.9 35.0,28.3 35.3,27.9 35.7,27.35 36.5,26.2 37.3,25.0 38.05,24.1 39.0,22.8 39.15,21.5 40.3,20.1 41.2,18.5 42.55,16.9 42.95,14.8 43.25,13.3 43.4,12.65 45.0,12.8 45.0,11.5 43.15,11.6 42.7,13.0 41.0,14.6 39.45,15.6 38.6,17.3 37.3,19.1 37.0,21.0 36.2,22.5 35.5,23.9 35.0,24.9 34.3,26.1 34.0,26.7 33.85,27.25 33.6,27.7 33.1,28.4 32.65,29.1 32.4,29.6'),
+      // Golfo Pérsico
+      P('48.8,30.0 48.0,29.4 48.5,28.4 49.65,27.0 50.1,26.4 50.8,24.75 50.8,25.4 51.15,26.1 51.55,25.3 51.6,24.6 52.6,24.2 54.4,24.5 55.3,25.25 55.95,25.8 56.35,26.3 60.0,24.0 60.0,27.5 56.3,27.2 54.9,26.55 53.9,26.7 52.6,27.5 51.5,27.9 50.85,28.95 50.1,29.9 49.2,30.4'),
+      // Mar Cáspio (margem ocidental)
+      P('47.0,46.5 47.3,45.0 47.5,44.0 48.3,42.1 49.6,40.5 50.4,40.4 49.4,39.6 49.0,38.4 49.9,37.4 51.0,36.9 53.0,36.8 60.0,36.8 60.0,46.5')
+    ],
+    islands: [
+      P('12.45,37.8 12.8,38.1 13.4,38.2 14.3,38.05 15.1,38.3 15.65,38.25 15.3,37.5 15.1,36.7 14.5,36.75 13.7,37.1 12.9,37.6'),
+      P('8.15,40.9 8.5,41.2 9.3,41.2 9.75,40.6 9.7,39.6 9.5,39.1 8.9,38.9 8.4,39.1 8.4,39.9'),
+      P('8.6,42.4 9.35,43.0 9.5,42.5 9.4,41.9 9.2,41.4 8.7,41.6'),
+      P('23.5,35.3 24.0,35.55 25.2,35.4 26.3,35.3 26.2,35.0 25.0,34.95 24.0,35.1'),
+      P('32.3,35.1 32.9,35.4 33.6,35.4 34.6,35.7 34.0,35.0 33.0,34.6 32.4,34.7'),
+      P('27.75,36.4 28.2,36.4 28.1,35.9 27.8,36.1')
+    ],
+    lakes: [
+      P('35.55,32.9 35.65,32.85 35.65,32.7 35.55,32.72 35.5,32.8'),
+      P('35.5,31.77 35.58,31.7 35.55,31.4 35.5,31.15 35.45,31.2 35.38,31.5 35.42,31.7')
+    ],
+    rivers: [
+      { w: 2.0, pts: P('32.5,15.6 33.95,17.7 33.3,19.5 30.5,19.2 30.8,20.5 31.3,21.8 31.6,22.35 32.9,24.1 32.7,26.15 31.2,27.2 30.75,28.1 31.1,29.1 31.25,30.05') },
+      { w: 1.6, pts: P('31.25,30.05 31.0,30.9 30.4,31.5') },
+      { w: 1.6, pts: P('31.25,30.05 31.5,30.9 31.8,31.5') },
+      { w: 1.6, pts: P('41.0,39.6 39.5,39.0 38.75,38.8 38.5,37.5 38.0,36.9 38.55,35.85 39.0,35.95 40.15,35.3 40.9,34.45 42.4,34.1 42.85,33.65 43.3,33.4 43.8,33.35 44.4,32.55 45.3,31.3 46.25,31.05 47.4,31.0 48.0,30.3 48.8,30.0') },
+      { w: 1.6, pts: P('39.8,38.4 40.2,37.9 42.2,37.35 43.15,36.35 43.25,35.45 43.85,34.2 44.35,33.3 46.0,32.5 47.15,31.85 47.4,31.0') },
+      { w: 1.4, pts: P('35.65,33.25 35.6,32.95') },
+      { w: 1.4, pts: P('35.57,32.7 35.55,32.3 35.5,31.85 35.5,31.77') }
+    ],
+    // t: texto; k: tipo; a/b: janela de largura (em graus de longitude) em que o rótulo aparece; anc: âncora do texto
+    labels: [
+      { t: 'Mar Mediterrâneo', lon: 17.5, lat: 34.6, k: 'sea', a: 15, b: 99 },
+      { t: 'Mar Mediterrâneo', lon: 32.7, lat: 33.9, k: 'sea', a: 0, b: 15 },
+      { t: 'Mar Negro', lon: 34.0, lat: 43.3, k: 'sea', a: 0, b: 99 },
+      { t: 'Mar Vermelho', lon: 38.6, lat: 20.6, k: 'sea', a: 0, b: 99 },
+      { t: 'Golfo Pérsico', lon: 52.9, lat: 27.3, k: 'sea', a: 0, b: 99, anc: 'end' },
+      { t: 'Cáspio', lon: 51.2, lat: 41.5, k: 'sea', a: 0, b: 99 },
+      { t: 'Mar Egeu', lon: 25.2, lat: 38.9, k: 'sea', a: 0, b: 14 },
+      { t: 'Mar Adriático', lon: 15.4, lat: 43.0, k: 'sea', a: 0, b: 14 },
+      { t: 'Mar Jônico', lon: 18.4, lat: 37.8, k: 'sea', a: 0, b: 16 },
+      { t: 'Mar Morto', lon: 35.68, lat: 31.42, k: 'sea', a: 0, b: 4.5, anc: 'start' },
+      { t: 'Mar da Galileia', lon: 35.72, lat: 32.8, k: 'sea', a: 0, b: 4.5, anc: 'start' },
+      { t: 'Nilo', lon: 32.75, lat: 26.4, k: 'sea', a: 0, b: 32, anc: 'start' },
+      { t: 'Tigre', lon: 43.8, lat: 34.9, k: 'sea', a: 0, b: 20, anc: 'start' },
+      { t: 'Eufrates', lon: 40.0, lat: 35.0, k: 'sea', a: 0, b: 20, anc: 'end' },
+      { t: 'Jordão', lon: 35.68, lat: 32.3, k: 'sea', a: 0, b: 4.5, anc: 'start' },
+      { t: 'Egito', lon: 29.5, lat: 26.0, k: 'reg', a: 8, b: 99 },
+      { t: 'Líbia', lon: 17.0, lat: 28.0, k: 'reg', a: 10, b: 99 },
+      { t: 'Cirenaica', lon: 22.0, lat: 32.2, k: 'reg', a: 5, b: 30 },
+      { t: 'Ásia Menor', lon: 32.5, lat: 39.3, k: 'reg', a: 14, b: 99 },
+      { t: 'Síria', lon: 37.0, lat: 34.6, k: 'reg', a: 8, b: 99 },
+      { t: 'Mesopotâmia', lon: 41.8, lat: 36.5, k: 'reg', a: 8, b: 99 },
+      { t: 'Arábia', lon: 43.0, lat: 24.5, k: 'reg', a: 10, b: 99 },
+      { t: 'Pérsia', lon: 51.5, lat: 31.5, k: 'reg', a: 10, b: 99 },
+      { t: 'Etiópia', lon: 39.0, lat: 11.5, k: 'reg', a: 12, b: 99 },
+      { t: 'Itália', lon: 12.4, lat: 43.0, k: 'reg', a: 6, b: 99 },
+      { t: 'Grécia', lon: 22.0, lat: 39.3, k: 'reg', a: 14, b: 40 },
+      { t: 'Macedônia', lon: 22.0, lat: 40.75, k: 'reg', a: 4, b: 14 },
+      { t: 'Acaia', lon: 22.2, lat: 37.7, k: 'reg', a: 4, b: 14 },
+      { t: 'Judeia', lon: 34.95, lat: 31.4, k: 'reg', a: 0, b: 6.5 },
+      { t: 'Samaria', lon: 35.15, lat: 32.3, k: 'reg', a: 0, b: 6.5 },
+      { t: 'Galileia', lon: 35.3, lat: 33.0, k: 'reg', a: 0, b: 6.5 },
+      { t: 'Fenícia', lon: 35.95, lat: 33.9, k: 'reg', a: 0, b: 9 },
+      { t: 'Moabe', lon: 35.85, lat: 31.3, k: 'reg', a: 0, b: 6.5 },
+      { t: 'Edom', lon: 35.5, lat: 30.4, k: 'reg', a: 0, b: 8 },
+      { t: 'Bitínia', lon: 30.8, lat: 40.2, k: 'reg', a: 0, b: 14 },
+      { t: 'Ásia', lon: 28.6, lat: 38.6, k: 'reg', a: 0, b: 14 },
+      { t: 'Frígia', lon: 30.5, lat: 38.9, k: 'reg', a: 0, b: 14 },
+      { t: 'Galácia', lon: 32.5, lat: 39.5, k: 'reg', a: 0, b: 14 },
+      { t: 'Capadócia', lon: 35.3, lat: 38.7, k: 'reg', a: 0, b: 14 },
+      { t: 'Cilícia', lon: 35.2, lat: 37.3, k: 'reg', a: 0, b: 14 },
+      { t: 'Chipre', lon: 33.2, lat: 35.1, k: 'reg', a: 0, b: 15 },
+      { t: 'Creta', lon: 24.8, lat: 35.25, k: 'reg', a: 0, b: 15 },
+      { t: 'Sicília', lon: 14.0, lat: 37.6, k: 'reg', a: 0, b: 20 }
+    ]
+  };
+
+  const MAP_W = 600, MAP_H = 520;
+
+  function computeWindow(pts, full) {
+    const B = GEO.bounds;
+    let x0 = B.minLon, x1 = B.maxLon, y0 = B.minLat, y1 = B.maxLat;
+    if (!full && pts.length) {
+      x0 = Math.min.apply(null, pts.map(p => p.lon));
+      x1 = Math.max.apply(null, pts.map(p => p.lon));
+      y0 = Math.min.apply(null, pts.map(p => p.lat));
+      y1 = Math.max.apply(null, pts.map(p => p.lat));
+      const padX = Math.max(1.5, (x1 - x0) * 0.25), padY = Math.max(1.2, (y1 - y0) * 0.25);
+      x0 -= padX; x1 += padX; y0 -= padY; y1 += padY;
+      if (x1 - x0 < 6) { const cx = (x0 + x1) / 2; x0 = cx - 3; x1 = cx + 3; }
+    }
+    const k = Math.cos(((y0 + y1) / 2) * Math.PI / 180);
+    const aspect = MAP_W / MAP_H;
+    const spanX = (x1 - x0) * k, spanY = y1 - y0;
+    if (spanX / spanY < aspect) {
+      const nx = spanY * aspect / k, cx = (x0 + x1) / 2;
+      x0 = cx - nx / 2; x1 = cx + nx / 2;
+    } else {
+      const ny = spanX / aspect, cy = (y0 + y1) / 2;
+      y0 = cy - ny / 2; y1 = cy + ny / 2;
+    }
+    const fit = (a, b, lo, hi) => {
+      if (b - a > hi - lo) return [a, b];
+      if (a < lo) return [lo, lo + (b - a)];
+      if (b > hi) return [hi - (b - a), hi];
+      return [a, b];
+    };
+    const fx = fit(x0, x1, B.minLon, B.maxLon), fy = fit(y0, y1, B.minLat, B.maxLat);
+    return { x0: fx[0], x1: fx[1], y0: fy[0], y1: fy[1], k: k, sc: MAP_W / ((fx[1] - fx[0]) * k) };
+  }
+
+  function prepMap(g) {
+    const B = GEO.bounds;
+    const list = Array.isArray(g.lugares) ? g.lugares.slice(0, 12) : [];
+    const inside = [], outside = [];
+    list.forEach(l => {
+      if (!l || !l.nome || l.latitude == null || l.longitude == null || l.latitude === '' || l.longitude === '') return;
+      const lat = Number(l.latitude), lon = Number(l.longitude);
+      if (!isFinite(lat) || !isFinite(lon)) return;
+      const p = { nome: String(l.nome), tipo: l.tipo === 'tradicao' ? 'tradicao' : 'texto', lat: lat, lon: lon, descricao: l.descricao || '', certeza: norm(l.certeza) };
+      if (lat >= B.minLat && lat <= B.maxLat && lon >= B.minLon && lon <= B.maxLon) inside.push(p); else outside.push(p);
+    });
+    const byName = {};
+    inside.forEach((p, i) => { byName[norm(p.nome)] = i; });
+    const route = (Array.isArray(g.rota) ? g.rota : []).map(n => byName[norm(n)]).filter(i => i !== undefined);
+    return { inside: inside, outside: outside, route: route.length > 1 ? route : [] };
+  }
+
+  function buildMapSvg(m, full) {
+    const w = computeWindow(m.inside, full);
+    const X = lon => (lon - w.x0) * w.k * w.sc;
+    const Y = lat => (w.y1 - lat) * w.sc;
+    const f1 = n => Math.round(n * 10) / 10;
+    const poly = pts => pts.map(p => f1(X(p[0])) + ',' + f1(Y(p[1]))).join(' ');
+    const spanLon = w.x1 - w.x0;
+    const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    const area = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+
+    // marcadores: afasta os que caem muito perto uns dos outros (poucas passadas, deslocamento pequeno)
+    const mk = m.inside.map((p, i) => ({ i: i, p: p, x: X(p.lon), y: Y(p.lat) }));
+    const MIN_D = 27;
+    for (let pass = 0; pass < 8; pass++) {
+      let moved = false;
+      for (let i = 0; i < mk.length; i++) {
+        for (let j = i + 1; j < mk.length; j++) {
+          let dx = mk[j].x - mk[i].x, dy = mk[j].y - mk[i].y;
+          let d = Math.hypot(dx, dy);
+          if (d >= MIN_D) continue;
+          if (d < 0.5) { const ang = (j * 2.4) + 0.7; dx = Math.cos(ang); dy = Math.sin(ang); d = 1; }
+          const push = (MIN_D - d) / 2 + 0.5;
+          mk[i].x -= dx / d * push; mk[i].y -= dy / d * push;
+          mk[j].x += dx / d * push; mk[j].y += dy / d * push;
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+    mk.forEach(o => {
+      o.x = Math.min(MAP_W - 14, Math.max(14, o.x));
+      o.y = Math.min(MAP_H - 14, Math.max(14, o.y));
+    });
+
+    // rótulos dos marcadores: 8 posições candidatas; escolhe a primeira livre, ou a de menor sobreposição
+    const obst = mk.map(o => ({ x: o.x - 13, y: o.y - 13, w: 26, h: 26 }));
+    let lblSvg = '';
+    mk.forEach(o => {
+      const tw = o.p.nome.length * 7.2 + 6, th = 17;
+      const cands = [
+        { tx: o.x + 16, ty: o.y + 5, anc: 'start' },
+        { tx: o.x - 16, ty: o.y + 5, anc: 'end' },
+        { tx: o.x, ty: o.y - 18, anc: 'middle' },
+        { tx: o.x, ty: o.y + 31, anc: 'middle' },
+        { tx: o.x + 13, ty: o.y - 14, anc: 'start' },
+        { tx: o.x + 13, ty: o.y + 28, anc: 'start' },
+        { tx: o.x - 13, ty: o.y - 14, anc: 'end' },
+        { tx: o.x - 13, ty: o.y + 28, anc: 'end' }
+      ];
+      const rectOf = c => ({ x: c.anc === 'start' ? c.tx : (c.anc === 'end' ? c.tx - tw : c.tx - tw / 2), y: c.ty - 13, w: tw, h: th });
+      let pick = null, best = Infinity;
+      for (const c of cands) {
+        const r = rectOf(c);
+        let pen = 0;
+        if (r.x < 2) pen += (2 - r.x) * 40;
+        if (r.x + r.w > MAP_W - 2) pen += (r.x + r.w - (MAP_W - 2)) * 40;
+        if (r.y < 2) pen += (2 - r.y) * 40;
+        if (r.y + r.h > MAP_H - 2) pen += (r.y + r.h - (MAP_H - 2)) * 40;
+        obst.forEach(b => { pen += area(r, b); });
+        if (pen < best) { best = pen; pick = c; }
+        if (pen === 0) break;
+      }
+      obst.push(rectOf(pick));
+      lblSvg += '<text class="mp-t-lbl" x="' + f1(pick.tx) + '" y="' + f1(pick.ty) + '" text-anchor="' + pick.anc + '">' + escapeHtml(o.p.nome) + '</text>';
+    });
+
+    // rótulos de mares, rios e regiões: só aparecem se couberem sem cobrir marcadores ou nomes
+    const inWin = l => l.lon > w.x0 && l.lon < w.x1 && l.lat > w.y0 && l.lat < w.y1;
+    let bgSvg = '';
+    GEO.labels.forEach(l => {
+      if (spanLon < l.a || spanLon > l.b || !inWin(l)) return;
+      const anc = l.anc || 'middle';
+      const tw = l.t.length * (l.k === 'sea' ? 7 : 8.2) + 4;
+      const tx = X(l.lon), ty = Y(l.lat);
+      const r = { x: anc === 'start' ? tx : (anc === 'end' ? tx - tw : tx - tw / 2), y: ty - 13, w: tw, h: 17 };
+      if (r.x < 2 || r.x + r.w > MAP_W - 2 || r.y < 2 || r.y + r.h > MAP_H - 2) return;
+      if (obst.some(b => hit(r, b))) return;
+      bgSvg += '<text class="' + (l.k === 'sea' ? 'mp-t-sea' : 'mp-t-reg') + '" x="' + f1(tx) + '" y="' + f1(ty) + '" text-anchor="' + anc + '">' + escapeHtml(l.t) + '</text>';
+    });
+
+    let s = '<svg viewBox="0 0 ' + MAP_W + ' ' + MAP_H + '" role="img" aria-label="Mapa esquemático dos lugares citados" xmlns="http://www.w3.org/2000/svg">';
+    s += '<defs><marker id="mpArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--gold)"/></marker></defs>';
+    s += '<rect width="' + MAP_W + '" height="' + MAP_H + '" class="mp-land"/>';
+    GEO.seas.forEach(p => { s += '<polygon class="mp-sea" points="' + poly(p) + '"/>'; });
+    GEO.islands.forEach(p => { s += '<polygon class="mp-isl" points="' + poly(p) + '"/>'; });
+    GEO.lakes.forEach(p => { s += '<polygon class="mp-lake" points="' + poly(p) + '"/>'; });
+    GEO.rivers.forEach(r => { s += '<polyline class="mp-river" style="stroke-width:' + r.w + 'px" points="' + poly(r.pts) + '"/>'; });
+    s += bgSvg;
+    if (m.route.length > 1) {
+      s += '<polyline class="mp-route" marker-mid="url(#mpArrow)" marker-end="url(#mpArrow)" points="' + m.route.map(i => f1(mk[i].x) + ',' + f1(mk[i].y)).join(' ') + '"/>';
+    }
+    s += lblSvg;
+    mk.forEach(o => {
+      const shape = o.p.tipo === 'tradicao'
+        ? '<rect class="mp-mk-tra" x="-10" y="-10" width="20" height="20" rx="4"/>'
+        : '<circle class="mp-mk-txt" r="11"/>';
+      s += '<g class="map-mk" data-mk="' + o.i + '" transform="translate(' + f1(o.x) + ',' + f1(o.y) + ')">' +
+        (o.p.certeza === 'baixa' ? '<circle class="mp-mk-unc" r="16"/>' : '') +
+        shape + '<text class="mp-mk-num" y="4.5">' + (o.i + 1) + '</text></g>';
+    });
+    s += '</svg>';
+    return s;
+  }
+  // MAP-END
+
+  function renderMapa(g) {
+    const m = prepMap(g);
+    const outside = m.outside.length
+      ? '<p class="map-outside">Fora da área do mapa: ' + m.outside.map(p => escapeHtml(p.nome) + ' (' + p.lat + '°, ' + p.lon + '°)').join('; ') + '.</p>' : '';
+    if (!m.inside.length) {
+      return '<p class="exegese-text">Não foi possível situar lugares deste versículo no mapa.</p>' + outside;
+    }
+    const resumo = g.resumo ? '<div class="isagogia"><span class="label">contexto</span>' + escapeHtml(g.resumo) + '</div>' : '';
+    const routeNote = m.route.length ? '<span><span class="sw rt"></span>' + escapeHtml(g.rota_titulo || 'Rota') + '</span>' : '';
+    const list = m.inside.map((p, i) => `
+      <li><button type="button" class="map-item" data-mk="${i}">
+        <span class="map-num ${p.tipo === 'tradicao' ? 'tra' : 'txt'}">${i + 1}</span>
+        <span class="map-info">
+          <span class="map-name">${escapeHtml(p.nome)}${p.certeza === 'baixa' ? '<span class="pill low">localização incerta</span>' : ''}</span>
+          <span class="map-desc">${escapeHtml(p.descricao)}</span>
+        </span>
+      </button></li>`).join('');
+    return '<div class="map-wrap">' + resumo +
+      '<div class="map-tools"><button type="button" class="btn-ghost map-view active" data-view="fit">Ajustar aos lugares</button><button type="button" class="btn-ghost map-view" data-view="full">Mapa completo</button></div>' +
+      '<div class="map-frame"><div class="map-canvas">' + buildMapSvg(m, false) + '</div></div>' +
+      '<div class="map-key"><span><span class="sw txt"></span>Lugar do texto</span><span><span class="sw tra"></span>Tradição textual (manuscritos e versões)</span><span><span class="sw unc"></span>Localização incerta</span>' + routeNote + '</div>' +
+      '<ul class="map-list">' + list + '</ul>' + outside +
+      '<p class="map-note">Mapa esquemático: contornos simplificados e coordenadas aproximadas, fornecidas pela IA. Use para orientação, não como cartografia.</p>' +
+      '</div>';
+  }
+
+  function afterMapa(panel, g) {
+    const m = prepMap(g);
+    const wrap = panel.querySelector('.map-wrap');
+    if (!wrap) return;
+    const canvas = wrap.querySelector('.map-canvas');
+    let active = null;
+    function paint() {
+      wrap.querySelectorAll('[data-mk]').forEach(el => {
+        el.classList.toggle('active', active !== null && el.getAttribute('data-mk') === String(active));
+      });
+    }
+    wrap.querySelectorAll('.map-view').forEach(b => {
+      b.addEventListener('click', () => {
+        wrap.querySelectorAll('.map-view').forEach(x => x.classList.toggle('active', x === b));
+        canvas.innerHTML = buildMapSvg(m, b.getAttribute('data-view') === 'full');
+        paint();
+      });
+    });
+    wrap.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-mk]');
+      if (!el) return;
+      const idx = Number(el.getAttribute('data-mk'));
+      active = (active === idx) ? null : idx;
+      paint();
+    });
+  }
+
+  const GROUPS = {
+    gramaticas: { loading: 'Consultando as gramáticas de referência…', prompt: promptGramaticas, render: renderGramaticas, text: textGramaticas },
+    edicoes: { loading: 'Comparando edições críticas e aparatos…', prompt: promptEdicoes, render: renderEdicoes, text: textEdicoes },
+    testemunhas: { loading: 'Consultando testemunhas antigas e tradições…', prompt: promptTestemunhas, render: renderTestemunhas, text: textTestemunhas },
+    dicionario: { loading: 'Procurando verbetes do dicionário…', prompt: promptDicionario, render: renderDicionario, text: textDicionario },
+    mapa: { loading: 'Situando os lugares no mapa…', prompt: promptMapa, render: renderMapa, after: afterMapa, text: textMapa }
+  };
+
+  function isHebrew(idioma) {
+    return /hebra|aram/i.test(idioma || '');
+  }
+
+  function renderResult(data) {
+    const dir = isHebrew(data.idioma_original) ? 'rtl' : 'ltr';
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="result-head clearfix">
+        <div class="drop">§</div>
+        <h2>${escapeHtml(data.referencia || '')}</h2>
+        <div class="meta">${escapeHtml(data.testamento || '')} · ${escapeHtml(data.idioma_original || '')}</div>
+      </div>
+      <div class="original-block" style="--txt-dir:${dir}">
+        <div class="original-text" dir="${dir}">${escapeHtml(data.texto_original || '')}</div>
+        <div class="translit"><span class="label">translit.</span>${escapeHtml(data.transliteracao || '')}</div>
+        <div class="literal"><span class="label">trad. literal</span>${escapeHtml(data.traducao_literal || '')}</div>
+      </div>
+      ${data.isagogia ? '<div class="isagogia"><span class="label">isagogia</span>' + escapeHtml(data.isagogia) + '</div>' : ''}
+      <div class="tabs" id="tabsRow"></div>
+      <div id="tabPanels"></div>
+      <div class="actions-row">
+        <button type="button" class="btn-ghost" id="loadAllBtn">Carregar todas as fontes adicionais</button>
+        <button type="button" class="btn-ghost" id="downloadBtn">Baixar como texto</button>
+      </div>
+    `;
+    resultArea.innerHTML = '';
+    resultArea.appendChild(wrap);
+
+    const search = { id: ++searchCounter, data: data, groups: {}, ctls: new Set(), panels: {}, tabBtns: {} };
+    GROUP_ORDER.forEach(gid => { search.groups[gid] = { state: 'idle', promise: null, data: null, error: null }; });
+    currentSearch = search;
+
+    const tabs = [
+      { id: 'morfologia', label: 'Morfologia', render: renderMorfologia },
+      { id: 'gramaticas', label: 'Gramáticas', lazy: true },
+      { id: 'variantes', label: 'Aparato crítico', render: renderVariantes },
+      { id: 'edicoes', label: 'Edições críticas', lazy: true },
+      { id: 'manuscritos', label: 'Manuscritos', render: renderManuscritos },
+      { id: 'antigas', label: 'Versões antigas', render: renderVersoesAntigas },
+      { id: 'testemunhas', label: 'Outras testemunhas', lazy: true },
+      { id: 'lexico', label: 'Léxico', render: renderLexico },
+      { id: 'dicionario', label: 'Dicionário', lazy: true },
+      { id: 'traducoes', label: 'Traduções', render: renderTraducoes },
+      { id: 'pais', label: 'Pais da Igreja', render: renderPais },
+      { id: 'comentario', label: 'Comentário', render: renderComentario },
+      { id: 'exegese', label: 'Hermenêutica', render: renderExegese },
+      { id: 'crossref', label: 'Referências cruzadas', render: renderCrossref },
+      { id: 'mapa', label: 'Mapa', lazy: true }
+    ];
+
+    const tabsRow = wrap.querySelector('#tabsRow');
+    const panelsEl = wrap.querySelector('#tabPanels');
+
+    tabs.forEach((t, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+      btn.textContent = t.label;
+      btn.addEventListener('click', () => {
+        tabsRow.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        panelsEl.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        panelsEl.querySelector('#panel-' + t.id).classList.add('active');
+        if (t.lazy && search.groups[t.id].state !== 'done') ensureGroup(search, t.id);
+      });
+      tabsRow.appendChild(btn);
+
+      const panel = document.createElement('div');
+      panel.className = 'tab-panel' + (i === 0 ? ' active' : '');
+      panel.id = 'panel-' + t.id;
+      if (t.lazy) {
+        search.panels[t.id] = panel;
+        search.tabBtns[t.id] = btn;
+      } else {
+        panel.innerHTML = t.render(data);
+      }
+      panelsEl.appendChild(panel);
+    });
+    GROUP_ORDER.forEach(gid => updateGroupUI(search, gid));
+
+    const loadAllBtn = wrap.querySelector('#loadAllBtn');
+    loadAllBtn.addEventListener('click', () => {
+      loadAllBtn.disabled = true;
+      prefetchGroups(search);
+    });
+
+    // wire cross-reference buttons
+    panelsEl.querySelectorAll('.crossref-btn').forEach(b => {
+      b.addEventListener('click', () => runSearch(b.getAttribute('data-ref')));
+    });
+
+    const dlBtn = wrap.querySelector('#downloadBtn');
+    dlBtn.addEventListener('click', async () => {
+      const text = buildPlainText(data, search);
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (data.referencia || 'estudo').replace(/[\/:*?"<>|]/g, '-') + '.txt';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    window.scrollTo({ top: wrap.offsetTop - 20, behavior: 'smooth' });
+  }
+
+  function renderMorfologia(data) {
+    const items = data.morfologia || [];
+    if (!items.length) return '<p class="exegese-text">Sem dados de morfologia disponíveis.</p>';
+    let html = '<div class="morph-grid">';
+    items.forEach(m => {
+      html += `<div class="morph-word">
+        <div class="mw-orig">${escapeHtml(m.palavra)}</div>
+        <div class="mw-gloss">${escapeHtml(m.transliteracao || '')} — ${escapeHtml(m.classe || '')}</div>
+        <div class="mw-gloss">${escapeHtml(m.analise || '')}</div>
+        ${m.strong && m.strong !== '—' ? '<button type="button" class="mw-strong" data-strong-word="' + escapeHtml(m.palavra) + '" data-strong-translit="' + escapeHtml(m.transliteracao || '') + '" data-strong-num="' + escapeHtml(m.strong) + '" data-strong-def="' + escapeHtml(m.definicao_lexica || m.significado || '') + '">Strong ' + escapeHtml(m.strong) + '</button>' : ''}
+        <div class="mw-gloss"><em>${escapeHtml(m.significado || '')}</em></div>
+      </div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderVariantes(data) {
+    const items = data.variantes_textuais || [];
+    if (!items.length) return '<p class="exegese-text">Nenhuma variante textual significativa registrada.</p>';
+    return items.map(v => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(v.variante)}</div>
+        <div class="entry-sub">${escapeHtml(v.testemunhas || '')}</div>
+        <div class="entry-body">${escapeHtml(v.explicacao || '')}</div>
+      </div>`).join('');
+  }
+
+  function renderManuscritos(data) {
+    const items = data.manuscritos_relevantes || [];
+    if (!items.length) return '<p class="exegese-text">Sem manuscritos listados.</p>';
+    return items.map(m => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(m.nome)}</div>
+        <div class="entry-sub">${escapeHtml(m.data || '')}</div>
+        <div class="entry-body">${escapeHtml(m.descricao || '')}</div>
+      </div>`).join('');
+  }
+
+  function renderLexico(data) {
+    const items = data.lexico_semantico || [];
+    if (!items.length) return '<p class="exegese-text">Sem dados léxico-semânticos.</p>';
+    return items.map(l => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(l.palavra)}</div>
+        <div class="entry-sub">${escapeHtml(l.campo_semantico || '')}</div>
+        <div class="entry-body">${escapeHtml(l.usos || '')}</div>
+      </div>`).join('');
+  }
+
+  function renderVersoesAntigas(data) {
+    const items = data.versoes_antigas || [];
+    if (!items.length) return '<p class="exegese-text">Sem dados de versões antigas.</p>';
+    return items.map(v => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(v.nome)}</div>
+        <div class="entry-sub">${escapeHtml(v.data || '')}</div>
+        ${v.texto_ou_leitura ? '<div class="entry-body" style="font-family:\'Noto Serif\',serif; font-style:italic; margin-bottom:0.3rem;">' + escapeHtml(v.texto_ou_leitura) + '</div>' : ''}
+        <div class="entry-body">${escapeHtml(v.relevancia || '')}</div>
+      </div>`).join('');
+  }
+
+  function renderTraducoes(data) {
+    const items = data.comparacao_traducoes || [];
+    if (!items.length) return '<p class="exegese-text">Sem comparação de traduções disponível.</p>';
+    return items.map(v => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(v.versao)}</div>
+        ${v.texto_literal ? '<div class="entry-reading" style="font-style:italic;">' + escapeHtml(v.texto_literal) + '</div>' : ''}
+        <div class="entry-body">${escapeHtml(v.abordagem || '')}</div>
+        ${v.observacao ? '<div class="entry-sub" style="margin-top:0.3rem;">' + escapeHtml(v.observacao) + '</div>' : ''}
+      </div>`).join('');
+  }
+
+  function renderComentario(data) {
+    const text = data.comentario_versiculo || '';
+    const paras = text.split(/\n\s*\n/).filter(Boolean);
+    if (!paras.length) return '<p class="exegese-text">Sem comentário disponível.</p>';
+    return '<div class="exegese-text">' + paras.map(p => `<p>${escapeHtml(p)}</p>`).join('') + '</div>';
+  }
+
+  function renderPais(data) {
+    const items = data.pais_igreja || [];
+    if (!items.length) return '<p class="exegese-text">Sem referências patrísticas.</p>';
+    return items.map(p => `
+      <div class="entry">
+        <div class="entry-title">${escapeHtml(p.autor)}</div>
+        <div class="entry-sub">${escapeHtml(p.obra || '')}</div>
+        <div class="entry-body">${escapeHtml(p.resumo_interpretacao || '')}</div>
+      </div>`).join('');
+  }
+
+  function renderExegese(data) {
+    const text = data.hermeneutica_exegese || '';
+    const paras = text.split(/\n\s*\n/).filter(Boolean);
+    if (!paras.length) return '<p class="exegese-text">Sem notas de hermenêutica.</p>';
+    return '<div class="exegese-text">' + paras.map(p => `<p>${escapeHtml(p)}</p>`).join('') + '</div>';
+  }
+
+  function renderCrossref(data) {
+    const items = data.referencias_cruzadas || [];
+    if (!items.length) return '<p class="exegese-text">Sem referências cruzadas.</p>';
+    return items.map(c => `
+      <button type="button" class="crossref-btn" data-ref="${escapeHtml(c.ref)}">
+        <span class="cr-ref">${escapeHtml(c.ref)}</span>
+        <span class="cr-note">${escapeHtml(c.conexao || '')}</span>
+      </button>`).join('');
+  }
+
+  function buildPlainText(data, search) {
+    let out = [];
+    out.push(data.referencia + ' (' + data.testamento + ', ' + data.idioma_original + ')');
+    out.push('');
+    if (data.isagogia) { out.push('ISAGOGIA: ' + data.isagogia); out.push(''); }
+    out.push('TEXTO ORIGINAL: ' + data.texto_original);
+    out.push('TRANSLITERAÇÃO: ' + data.transliteracao);
+    out.push('TRADUÇÃO LITERAL: ' + data.traducao_literal);
+    out.push('');
+    out.push('--- MORFOLOGIA ---');
+    (data.morfologia || []).forEach(m => out.push('- ' + m.palavra + ' (' + m.transliteracao + ', ' + m.classe + (m.strong ? ', Strong ' + m.strong : '') + '): ' + m.analise + ' — ' + m.significado));
+    out.push('');
+    out.push('--- APARATO CRÍTICO / VARIANTES TEXTUAIS ---');
+    (data.variantes_textuais || []).forEach(v => out.push('- ' + v.variante + ' [' + v.testemunhas + ']: ' + v.explicacao));
+    out.push('');
+    out.push('--- MANUSCRITOS RELEVANTES ---');
+    (data.manuscritos_relevantes || []).forEach(m => out.push('- ' + m.nome + ' (' + m.data + '): ' + m.descricao));
+    out.push('');
+    out.push('--- LÉXICO / SEMÂNTICA ---');
+    (data.lexico_semantico || []).forEach(l => out.push('- ' + l.palavra + ' (' + l.campo_semantico + '): ' + l.usos));
+    out.push('');
+    out.push('--- VERSÕES ANTIGAS (PESHITTA, VULGATA, TRADIÇÃO ETÍOPE) ---');
+    (data.versoes_antigas || []).forEach(v => out.push('- ' + v.nome + ' (' + v.data + '): ' + (v.texto_ou_leitura ? v.texto_ou_leitura + ' — ' : '') + v.relevancia));
+    out.push('');
+    out.push('--- COMPARAÇÃO DE TRADUÇÕES ---');
+    (data.comparacao_traducoes || []).forEach(v => out.push('- ' + v.versao + ': ' + (v.texto_literal ? v.texto_literal + ' — ' : '') + v.abordagem + (v.observacao ? ' | ' + v.observacao : '')));
+    out.push('');
+    out.push('--- PAIS DA IGREJA ---');
+    (data.pais_igreja || []).forEach(p => out.push('- ' + p.autor + ', ' + p.obra + ': ' + p.resumo_interpretacao));
+    out.push('');
+    out.push('--- COMENTÁRIO VERSÍCULO POR VERSÍCULO ---');
+    out.push(data.comentario_versiculo || '');
+    out.push('');
+    out.push('--- HERMENÊUTICA E EXEGESE ---');
+    out.push(data.hermeneutica_exegese || '');
+    out.push('');
+    out.push('--- REFERÊNCIAS CRUZADAS ---');
+    (data.referencias_cruzadas || []).forEach(c => out.push('- ' + c.ref + ': ' + c.conexao));
+    if (search) {
+      GROUP_ORDER.forEach(gid => {
+        const g = search.groups[gid];
+        if (g && g.state === 'done' && g.data) {
+          out.push('');
+          GROUPS[gid].text(g.data).forEach(l => out.push(l));
+        }
+      });
+    }
+    return out.join('\n');
+  }
+
+})();
+</script>
+</body>
+</html>
