@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const OPENAI_URL = "https://api.openai.com/v1/responses";
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/responses";
+const MODEL = "openai/gpt-6-astra";
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
@@ -13,12 +14,11 @@ export const Route = createFileRoute("/api/ask")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["OPENAI_API_KEY"];
+        const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) {
-          // 412 (not 5xx): missing config is an expected state, not a server crash.
           return json(412, {
             error: "server_not_configured",
-            message: "OPENAI_API_KEY não configurada.",
+            message: "IA do servidor não configurada.",
           });
         }
 
@@ -34,54 +34,71 @@ export const Route = createFileRoute("/api/ask")({
 
         let resp: Response;
         try {
-          resp = await fetch(OPENAI_URL, {
+          resp = await fetch(GATEWAY_URL, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${apiKey}`,
+              "X-Lovable-AIG-SDK": "fetch",
             },
             body: JSON.stringify({
-              model: process.env["OPENAI_MODEL"] || "gpt-6-sol",
+              model: MODEL,
               input: prompt,
               store: false,
+              stream: true,
+              reasoning: { effort: "low" },
             }),
             signal: request.signal,
           });
         } catch (e) {
           return json(500, {
-            error: "openai_error",
+            error: "ai_error",
             message: e instanceof Error ? e.message : "Erro interno.",
           });
         }
 
-        const data = (await resp.json().catch(() => null)) as {
-          error?: { message?: string };
-          output_text?: string;
-          output?: Array<{
-            content?: Array<{ type?: string; text?: string }>;
-          }>;
-        } | null;
-
-        if (!resp.ok) {
-          const code =
-            resp.status === 401 || resp.status === 403
-              ? "openai_auth_error"
-              : resp.status === 429
-                ? "rate_limited"
-                : "openai_error";
+        if (!resp.ok || !resp.body) {
+          const err = (await resp.json().catch(() => null)) as {
+            error?: { message?: string };
+            message?: string;
+          } | null;
           return json(resp.status, {
-            error: code,
-            message: data?.error?.message || "Erro na OpenAI.",
+            error: resp.status === 429 ? "rate_limited" : "ai_error",
+            message: err?.error?.message || err?.message || "Erro no serviço de IA.",
           });
         }
 
-        const text =
-          data?.output_text ||
-          (data?.output || [])
-            .flatMap((x) => x.content || [])
-            .filter((x) => x.type === "output_text")
-            .map((x) => x.text || "")
-            .join("");
+        // Stream SSE deltas and accumulate the final text.
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let text = "";
+
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const frames = buffer.split("\n\n");
+          buffer = frames.pop() || "";
+          for (const frame of frames) {
+            for (const line of frame.split("\n")) {
+              if (!line.startsWith("data:")) continue;
+              const payload = line.slice(5).trim();
+              if (!payload || payload === "[DONE]") continue;
+              try {
+                const evt = JSON.parse(payload) as {
+                  type?: string;
+                  delta?: string;
+                };
+                if (evt.type === "response.output_text.delta" && evt.delta) {
+                  text += evt.delta;
+                }
+              } catch {
+                // ignore non-JSON keep-alive lines
+              }
+            }
+          }
+        }
 
         return json(200, { text });
       },
