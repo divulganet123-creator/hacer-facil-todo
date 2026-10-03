@@ -15,7 +15,8 @@ export const Route = createFileRoute("/api/ask")({
       POST: async ({ request }) => {
         const apiKey = process.env["OPENAI_API_KEY"];
         if (!apiKey) {
-          return json(500, {
+          // 412 (not 5xx): missing config is an expected state, not a server crash.
+          return json(412, {
             error: "server_not_configured",
             message: "OPENAI_API_KEY não configurada.",
           });
