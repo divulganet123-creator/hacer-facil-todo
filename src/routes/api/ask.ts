@@ -71,6 +71,7 @@ export const Route = createFileRoute("/api/ask")({
         const decoder = new TextDecoder();
         let buffer = "";
         let text = "";
+        let apiError: { status: number; message: string } | null = null;
 
         for (;;) {
           const { done, value } = await reader.read();
@@ -87,15 +88,33 @@ export const Route = createFileRoute("/api/ask")({
                 const evt = JSON.parse(payload) as {
                   type?: string;
                   delta?: string;
+                  error?: { code?: string; message?: string };
+                  response?: { error?: { code?: string; message?: string } };
                 };
+                const failed =
+                  evt.error || (evt.type === "response.failed" ? evt.response?.error : undefined);
                 if (evt.type === "response.output_text.delta" && evt.delta) {
                   text += evt.delta;
+                } else if (failed) {
+                  const code = failed.code || evt.type;
+                  const message = failed.message || "Erro na OpenAI.";
+                  apiError = {
+                    status: code === "insufficient_quota" || code === "credit_balance_exhausted" ? 402 : 502,
+                    message,
+                  };
                 }
               } catch {
                 // ignore non-JSON keep-alive lines
               }
             }
           }
+        }
+
+        if (apiError) {
+          return json(apiError.status, {
+            error: "openai_error",
+            message: apiError.message,
+          });
         }
 
         return json(200, { text });
