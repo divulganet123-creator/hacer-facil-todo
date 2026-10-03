@@ -107,6 +107,13 @@ export const Route = createFileRoute("/api/ask")({
           }
         }
 
+        if (apiError) {
+          return json(apiError.status, {
+            error: "openai_error",
+            message: apiError.message,
+          });
+        }
+
         return json(200, { text });
       },
     },
