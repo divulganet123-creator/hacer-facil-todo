@@ -71,6 +71,7 @@ export const Route = createFileRoute("/api/ask")({
         const decoder = new TextDecoder();
         let buffer = "";
         let text = "";
+        let apiError: { status: number; message: string } | null = null;
 
         for (;;) {
           const { done, value } = await reader.read();
@@ -87,9 +88,17 @@ export const Route = createFileRoute("/api/ask")({
                 const evt = JSON.parse(payload) as {
                   type?: string;
                   delta?: string;
+                  error?: { code?: string; message?: string };
                 };
                 if (evt.type === "response.output_text.delta" && evt.delta) {
                   text += evt.delta;
+                } else if (evt.type === "error" || evt.type === "response.failed") {
+                  const code = evt.error?.code || evt.type;
+                  const message = evt.error?.message || "Erro na OpenAI.";
+                  apiError = {
+                    status: code === "insufficient_quota" ? 402 : 502,
+                    message,
+                  };
                 }
               } catch {
                 // ignore non-JSON keep-alive lines
