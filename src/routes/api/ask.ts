@@ -89,14 +89,17 @@ export const Route = createFileRoute("/api/ask")({
                   type?: string;
                   delta?: string;
                   error?: { code?: string; message?: string };
+                  response?: { error?: { code?: string; message?: string } };
                 };
+                const failed =
+                  evt.error || (evt.type === "response.failed" ? evt.response?.error : undefined);
                 if (evt.type === "response.output_text.delta" && evt.delta) {
                   text += evt.delta;
-                } else if (evt.type === "error" || evt.type === "response.failed") {
-                  const code = evt.error?.code || evt.type;
-                  const message = evt.error?.message || "Erro na OpenAI.";
+                } else if (failed) {
+                  const code = failed.code || evt.type;
+                  const message = failed.message || "Erro na OpenAI.";
                   apiError = {
-                    status: code === "insufficient_quota" ? 402 : 502,
+                    status: code === "insufficient_quota" || code === "credit_balance_exhausted" ? 402 : 502,
                     message,
                   };
                 }
