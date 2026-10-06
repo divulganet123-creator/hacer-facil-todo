@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const API_URL = "https://api.openai.com/v1/responses";
+const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 function json(status: number, body: Record<string, unknown>) {
   return new Response(JSON.stringify(body), {
@@ -13,14 +13,14 @@ export const Route = createFileRoute("/api/ask")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env["OPENAI_API_KEY"];
+        const apiKey = process.env["OPENROUTER_API_KEY"];
         if (!apiKey) {
           return json(412, {
             error: "server_not_configured",
-            message: "OPENAI_API_KEY não configurada.",
+            message: "OPENROUTER_API_KEY não configurada.",
           });
         }
-        const model = process.env["OPENAI_MODEL"] || "gpt-6-sol";
+        const model = process.env["OPENROUTER_MODEL"] || "openai/gpt-4o-mini";
 
         let prompt: unknown;
         try {
@@ -42,8 +42,7 @@ export const Route = createFileRoute("/api/ask")({
             },
             body: JSON.stringify({
               model,
-              input: prompt,
-              store: false,
+              messages: [{ role: "user", content: prompt }],
               stream: true,
             }),
             signal: request.signal,
@@ -86,22 +85,18 @@ export const Route = createFileRoute("/api/ask")({
               if (!payload || payload === "[DONE]") continue;
               try {
                 const evt = JSON.parse(payload) as {
-                  type?: string;
-                  delta?: string;
                   error?: { code?: string; message?: string };
-                  response?: { error?: { code?: string; message?: string } };
+                  choices?: Array<{ delta?: { content?: string } }>;
                 };
-                const failed =
-                  evt.error || (evt.type === "response.failed" ? evt.response?.error : undefined);
-                if (evt.type === "response.output_text.delta" && evt.delta) {
-                  text += evt.delta;
-                } else if (failed) {
-                  const code = failed.code || evt.type;
-                  const message = failed.message || "Erro na OpenAI.";
+                if (evt.error) {
+                  const code = evt.error.code || "";
+                  const message = evt.error.message || "Erro no serviço de IA.";
                   apiError = {
-                    status: code === "insufficient_quota" || code === "credit_balance_exhausted" ? 402 : 502,
+                    status: code === 402 || /insufficient|credit|quota/i.test(code) ? 402 : 502,
                     message,
                   };
+                } else if (evt.choices?.[0]?.delta?.content) {
+                  text += evt.choices[0].delta.content;
                 }
               } catch {
                 // ignore non-JSON keep-alive lines
@@ -112,7 +107,7 @@ export const Route = createFileRoute("/api/ask")({
 
         if (apiError) {
           return json(apiError.status, {
-            error: "openai_error",
+            error: "ai_error",
             message: apiError.message,
           });
         }
