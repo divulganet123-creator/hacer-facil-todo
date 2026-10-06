@@ -92,7 +92,7 @@ export const Route = createFileRoute("/api/ask")({
                   const code = evt.error.code || "";
                   const message = evt.error.message || "Erro no serviço de IA.";
                   apiError = {
-                    status: code === 402 || /insufficient|credit|quota/i.test(code) ? 402 : 502,
+                    status: String(code) === "402" || /insufficient|credit|quota/i.test(String(code)) ? 402 : 502,
                     message,
                   };
                 } else if (evt.choices?.[0]?.delta?.content) {
