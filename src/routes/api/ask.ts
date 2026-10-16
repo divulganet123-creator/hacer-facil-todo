@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/ask")({
             message: "OPENROUTER_API_KEY não configurada.",
           });
         }
-        const model = process.env["OPENROUTER_MODEL"] || "openai/gpt-4o-mini";
+        const model = process.env["OPENROUTER_MODEL"] || "deepseek/deepseek-chat-v3-0324:free";
 
         let prompt: unknown;
         try {
