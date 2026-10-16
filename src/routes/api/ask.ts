@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/ask")({
             message: "OPENROUTER_API_KEY não configurada.",
           });
         }
-        const model = process.env["OPENROUTER_MODEL"] || "google/gemma-4-31b-it:free";
+        const model = process.env["OPENROUTER_MODEL"] || "nvidia/nemotron-3.5-super-vl:free";
 
         let prompt: unknown;
         try {
